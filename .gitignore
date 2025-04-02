@@ -31,3 +31,53 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignorar archivos del sistema operativo macOS
+.DS_Store
+.Trash/
+.localized
+
+# Ignorar archivos de configuración personales
+.bash_profile
+.bash_profile.save
+.zprofile
+.zshrc
+.zsh_history
+.zsh_sessions/
+
+# Ignorar directorios de herramientas de desarrollo
+.idea/
+.vscode/
+.gradle/
+.m2/
+.cache/
+.config/
+.ssh/
+.eclipse/
+.netbeans/
+.android/
+.dotnet/
+.p2/
+.templateengine/
+.nuget/
+.local/
+.viminfo
+
+# Ignorar capturas de pantalla y otros archivos temporales
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.zip
+
+# Ignorar directorios específicos de tu sistema
+Documents/
+Downloads/
+Music/
+Movies/
+Pictures/
+Projects/
+Public/
+VirtualBox VMs/
+apache-maven-3.9.5/
+eclipse/

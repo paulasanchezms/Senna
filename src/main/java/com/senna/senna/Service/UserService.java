@@ -111,4 +111,15 @@ public class UserService {
     public boolean emailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
+    }
+
+    public User findByIdEntity(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + id));
+    }
+
 }

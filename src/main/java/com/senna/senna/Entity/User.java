@@ -8,6 +8,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(exclude = {"patients", "psychologists"})
 @Entity
 @Table(name = "users")
 public class User {

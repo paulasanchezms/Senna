@@ -33,7 +33,7 @@ public class UserController {
     }
 
     // Obtener por ID
-    @GetMapping("/{id:\\d+}")
+    @GetMapping("/by-id/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         UserResponseDTO user = userService.getUserById(id);
         return ResponseEntity.ok(user);

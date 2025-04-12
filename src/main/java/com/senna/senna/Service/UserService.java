@@ -106,4 +106,9 @@ public class UserService {
         User user = getUserEntityById(id);
         userRepository.delete(user);
     }
+
+    //Ver si existe email
+    public boolean emailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
 }

@@ -3,8 +3,6 @@ package com.senna.senna.Controller;
 import com.senna.senna.DTO.CreateUserDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
-import com.senna.senna.Entity.User;
-import com.senna.senna.Mapper.UserMapper;
 import com.senna.senna.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,59 +20,72 @@ public class UserController {
 
     // Crear usuario
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody CreateUserDTO dto) {
-        User user = UserMapper.fromDTO(dto);
-        User created = userService.createUser(user);
+    public ResponseEntity<UserResponseDTO> createUser(@RequestBody CreateUserDTO dto) {
+        UserResponseDTO created = userService.createUser(dto);
         return ResponseEntity.ok(created);
     }
 
     // Obtener todos los usuarios
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     // Obtener por ID
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        return ResponseEntity.ok(UserMapper.toResponseDTO(user));
+        UserResponseDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     // Obtener por email
     @GetMapping("/email/{email}")
-    public ResponseEntity<Optional<User>> getUserByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(userService.getUserByEmail(email));
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        Optional<UserResponseDTO> user = userService.getUserByEmail(email);
+        return user.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Obtener todos los psicólogos
     @GetMapping("/psychologists")
-    public ResponseEntity<List<User>> getAllPsychologists() {
-        return ResponseEntity.ok(userService.getAllPsychologists());
+    public ResponseEntity<List<UserResponseDTO>> getAllPsychologists() {
+        List<UserResponseDTO> psychologists = userService.getAllPsychologists();
+        return ResponseEntity.ok(psychologists);
     }
 
     // Buscar psicólogos por especialidad
     @GetMapping("/psychologists/search")
-    public ResponseEntity<List<User>> searchPsychologistsBySpecialty(@RequestParam String specialty) {
-        return ResponseEntity.ok(userService.getPsychologistsBySpecialty(specialty));
+    public ResponseEntity<List<UserResponseDTO>> searchPsychologistsBySpecialty(@RequestParam String specialty) {
+        List<UserResponseDTO> result = userService.getPsychologistsBySpecialty(specialty);
+        return ResponseEntity.ok(result);
     }
 
     // Obtener todos los pacientes
     @GetMapping("/patients")
-    public ResponseEntity<List<User>> getAllPatients() {
-        return ResponseEntity.ok(userService.getAllPatients());
+    public ResponseEntity<List<UserResponseDTO>> getAllPatients() {
+        List<UserResponseDTO> patients = userService.getAllPatients();
+        return ResponseEntity.ok(patients);
     }
 
-    // Asignar paciente a psicólogo
-    @PostMapping("/assign")
+    // Asignar paciente a psicólogo (nuevo mapping para evitar colisión)
+    @PostMapping("/assign-patient")
     public ResponseEntity<String> assignPatientToPsychologist(@RequestParam Long psychologistId, @RequestParam Long patientId) {
         userService.assignPatientToPsychologist(psychologistId, patientId);
         return ResponseEntity.ok("Asignación realizada con éxito.");
     }
 
+    // Actualizar usuario
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @RequestBody UpdateUserDTO dto) {
-        User updated = userService.updateUser(id, dto);
-        return ResponseEntity.ok(UserMapper.toResponseDTO(updated));
+        UserResponseDTO updated = userService.updateUser(id, dto);
+        return ResponseEntity.ok(updated);
+    }
+
+    //Eliminar
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("Usuario eliminado correctamente.");
     }
 }

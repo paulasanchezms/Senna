@@ -57,6 +57,39 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     }
 
     @Override
+    public DiaryEntry updateEntry(String userEmail, Long entryId, DiaryEntryDTO dto) {
+        // Obtener el usuario autenticado (paciente)
+        User user = userService.findByEmail(userEmail);
+        // Buscar la entrada por su ID
+        DiaryEntry entry = diaryEntryRepository.findById(entryId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
+        // Verificar que la entrada pertenece al usuario
+        if (!entry.getUser().getId_user().equals(user.getId_user())) {
+            throw new IllegalArgumentException("No tienes permiso para editar esta entrada");
+        }
+        // Actualizar campos de la entrada y guardarla
+        entry.setMood(dto.getMood());
+        entry.setSymptoms(dto.getSymptoms());
+        entry.setNotes(dto.getNotes());
+        // Opcional: podrías permitir actualizar la fecha si así lo deseas, pero ten en cuenta que la fecha se usa para identificar la entrada.
+        // entry.setDate(dto.getDate());
+        return diaryEntryRepository.save(entry);
+    }
+
+    @Override
+    public void deleteEntry(String userEmail, Long entryId) {
+        // Obtener usuario autenticado (paciente)
+        User user = userService.findByEmail(userEmail);
+        // Buscar la entrada por ID
+        DiaryEntry entry = diaryEntryRepository.findById(entryId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
+        // Verificar que la entrada pertenece al usuario
+        if (!entry.getUser().getId_user().equals(user.getId_user())) {
+            throw new IllegalArgumentException("No tienes permiso para eliminar esta entrada");
+        }
+        diaryEntryRepository.delete(entry);
+    }
+    @Override
     public DiaryEntry getEntryByDate(String userEmail, String date) {
         User user = userService.findByEmail(userEmail);
         LocalDate localDate = LocalDate.parse(date);

@@ -9,4 +9,6 @@ public interface DiaryEntryService {
     List<DiaryEntry> getAllEntries(String userEmail);
     DiaryEntry getEntryByDate(String userEmail, String date);
     List<DiaryEntry> getEntriesForPatient(String psychologistEmail, Long patientId);
+    DiaryEntry updateEntry(String userEmail, Long entryId, DiaryEntryDTO dto);
+    void deleteEntry(String userEmail, Long entryId);
 }

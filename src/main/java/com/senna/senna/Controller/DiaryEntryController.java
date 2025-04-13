@@ -23,19 +23,20 @@ public class DiaryEntryController {
         this.diaryService = diaryService;
     }
 
-    // Crear o actualizar una entrada del diario
+    // Crear una nueva entrada del diario
     @PostMapping
-    public ResponseEntity<DiaryEntryResponseDTO> saveEntry(@AuthenticationPrincipal UserDetails userDetails,
-                                                           @RequestBody DiaryEntryDTO dto) {
-        // Se pasa directamente el email del usuario autenticado
+    public ResponseEntity<DiaryEntryResponseDTO> saveEntry(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody DiaryEntryDTO dto) {
         DiaryEntry saved = diaryService.saveEntry(userDetails.getUsername(), dto);
         DiaryEntryResponseDTO response = DiaryEntryMapper.toResponseDTO(saved);
         return ResponseEntity.ok(response);
     }
 
-    // Obtener todas las entradas del diario para el usuario
+    // Obtener todas las entradas del diario para el usuario autenticado
     @GetMapping
-    public ResponseEntity<List<DiaryEntryResponseDTO>> getAllEntries(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<DiaryEntryResponseDTO>> getAllEntries(
+            @AuthenticationPrincipal UserDetails userDetails) {
         List<DiaryEntry> entries = diaryService.getAllEntries(userDetails.getUsername());
         List<DiaryEntryResponseDTO> response = entries.stream()
                 .map(DiaryEntryMapper::toResponseDTO)
@@ -43,16 +44,37 @@ public class DiaryEntryController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener la entrada del diario de una fecha específica (formato ISO: yyyy-MM-dd)
-    @GetMapping("/{date}")
-    public ResponseEntity<DiaryEntryResponseDTO> getEntryByDate(@AuthenticationPrincipal UserDetails userDetails,
-                                                                @PathVariable String date) {
+    // Obtener la entrada del diario para una fecha específica (formato ISO: yyyy-MM-dd)
+    @GetMapping("/date/{date}")
+    public ResponseEntity<DiaryEntryResponseDTO> getEntryByDate(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String date) {
         DiaryEntry entry = diaryService.getEntryByDate(userDetails.getUsername(), date);
         DiaryEntryResponseDTO response = DiaryEntryMapper.toResponseDTO(entry);
         return ResponseEntity.ok(response);
     }
 
-    // Endpoint para que un psicólogo consulte las entradas de un paciente asignado
+    // Actualizar una entrada existente del diario (por id)
+    @PutMapping("/entry/{id}")
+    public ResponseEntity<DiaryEntryResponseDTO> updateEntry(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id,
+            @RequestBody DiaryEntryDTO dto) {
+        DiaryEntry updated = diaryService.updateEntry(userDetails.getUsername(), id, dto);
+        DiaryEntryResponseDTO response = DiaryEntryMapper.toResponseDTO(updated);
+        return ResponseEntity.ok(response);
+    }
+
+    // Eliminar una entrada del diario (por id)
+    @DeleteMapping("/entry/{id}")
+    public ResponseEntity<Void> deleteEntry(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        diaryService.deleteEntry(userDetails.getUsername(), id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Endpoint para que un psicólogo consulte las entradas del diario de un paciente asignado
     @GetMapping("/psychologist/patient/{patientId}")
     public ResponseEntity<List<DiaryEntryResponseDTO>> getEntriesForPatient(
             @AuthenticationPrincipal UserDetails userDetails,

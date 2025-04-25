@@ -70,6 +70,7 @@ build/
 *.pdf
 *.zip
 
+.DS_Store
 # Ignorar directorios específicos de tu sistema
 Documents/
 Downloads/

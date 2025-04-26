@@ -6,14 +6,20 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+
 @Configuration
 public class CorsConfig {
 
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // Permitir el origen del frontend (cambia la URL si es necesario)
-        config.addAllowedOrigin("http://localhost:8100");
+
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:8100",
+                "https://senna-frontend-production.up.railway.app"
+        ));
+
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);

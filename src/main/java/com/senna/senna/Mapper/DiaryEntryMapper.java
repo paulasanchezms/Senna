@@ -19,21 +19,23 @@ public class DiaryEntryMapper {
         dto.setDate(entry.getDate());
         dto.setNotes(entry.getNotes());
 
-        // Map moods
-        List<MoodDTO> moodDTOs = entry.getMoods().stream()
-                .map(DiaryEntryMapper::toMoodDTO)
-                .collect(Collectors.toList());
-        dto.setMoods(moodDTOs);
-
-        // Map symptoms
-        List<SymptomDTO> symptomDTOs = entry.getSymptoms().stream()
-                .map(DiaryEntryMapper::toSymptomDTO)
-                .collect(Collectors.toList());
-        dto.setSymptoms(symptomDTOs);
-
         // Map user
         UserResponseDTO userDTO = UserMapper.toResponseDTO(entry.getUser());
         dto.setUser(userDTO);
+
+        // Map moods
+        List<MoodDTO> moodDTOs = entry.getMoods()
+                .stream()
+                .map(DiaryEntryMapper::toMoodDTO)
+                .collect(Collectors.toList());
+        dto.setMood(moodDTOs);
+
+        // Map symptoms
+        List<SymptomDTO> symptomDTOs = entry.getSymptoms()
+                .stream()
+                .map(DiaryEntryMapper::toSymptomDTO)
+                .collect(Collectors.toList());
+        dto.setSymptoms(symptomDTOs);
 
         return dto;
     }

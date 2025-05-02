@@ -6,8 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.util.Set;
 
-    @Data
+@Data
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
@@ -21,9 +22,17 @@ import java.time.LocalDate;
 
         private LocalDate date;
 
-        private String mood; // ej. Feliz, Triste, Ansioso...
+        @ManyToMany
+        @JoinTable(name = "diary_entry_symptoms",
+                joinColumns = @JoinColumn(name = "diary_entry_id"),
+                inverseJoinColumns = @JoinColumn(name = "symptom_id"))
+        private Set<Symptom> symptoms;
 
-        private String symptoms; // ej. Dolor de cabeza, insomnio...
+        @ManyToMany
+        @JoinTable(name = "diary_entry_moods",
+                joinColumns = @JoinColumn(name = "diary_entry_id"),
+                inverseJoinColumns = @JoinColumn(name = "mood_id"))
+        private Set<Mood> moods;
 
         private String notes; // Texto libre
 

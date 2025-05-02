@@ -18,7 +18,7 @@ public class CorsConfig {
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:8100",
                 "https://senna-frontend-production.up.railway.app",
-                "https://senna-production-45cb.up.railway.app"  // <— tu backend
+                "https://senna-production-45cb.up.railway.app"
 
         ));
 

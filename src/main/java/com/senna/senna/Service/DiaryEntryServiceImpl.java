@@ -16,8 +16,8 @@ import java.util.*;
 public class DiaryEntryServiceImpl implements DiaryEntryService {
 
     private final DiaryEntryRepository diaryEntryRepository;
-    private final UserService userService;  // Usado para obtener entidades User (paciente o psicólogo)
-    private final UserRepository userRepository; // Para consultas puntuales, en caso de necesitar obtener paciente por id
+    private final UserService userService;
+    private final UserRepository userRepository;
     private final SymptomRepository symptomRepository;
     private final MoodRepository moodRepository;
 
@@ -37,7 +37,6 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     public DiaryEntry saveEntry(String userEmail, DiaryEntryDTO dto) {
         User user = userService.findByEmail(userEmail);
 
-        // PROTECCIÓN: Evitar null pointer en listas de IDs
         List<Long> symptomIds = dto.getSymptomIds() != null ? dto.getSymptomIds() : Collections.emptyList();
         List<Long> moodIds = dto.getMoodIds() != null ? dto.getMoodIds() : Collections.emptyList();
 
@@ -50,6 +49,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
             entry.setSymptoms(symptoms);
             entry.setMoods(moods);
             entry.setNotes(dto.getNotes());
+            entry.setMoodLevel(dto.getMoodLevel());
             return diaryEntryRepository.save(entry);
         } else {
             DiaryEntry entry = DiaryEntry.builder()
@@ -58,6 +58,7 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
                     .symptoms(symptoms)
                     .moods(moods)
                     .notes(dto.getNotes())
+                    .moodLevel(dto.getMoodLevel())
                     .build();
             return diaryEntryRepository.save(entry);
         }
@@ -79,33 +80,31 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
             throw new IllegalArgumentException("No tienes permiso para editar esta entrada");
         }
 
-        // PROTECCIÓN: Evitar null pointer en listas de IDs
         List<Long> symptomIds = dto.getSymptomIds() != null ? dto.getSymptomIds() : Collections.emptyList();
         List<Long> moodIds = dto.getMoodIds() != null ? dto.getMoodIds() : Collections.emptyList();
 
         Set<Symptom> symptoms = new HashSet<>(symptomRepository.findAllById(symptomIds));
         Set<Mood> moods = new HashSet<>(moodRepository.findAllById(moodIds));
 
-        // Actualizar campos
         entry.setSymptoms(symptoms);
         entry.setMoods(moods);
         entry.setNotes(dto.getNotes());
+        entry.setMoodLevel(dto.getMoodLevel());
 
         return diaryEntryRepository.save(entry);
     }
+
     @Override
     public void deleteEntry(String userEmail, Long entryId) {
-        // Obtener usuario autenticado (paciente)
         User user = userService.findByEmail(userEmail);
-        // Buscar la entrada por ID
         DiaryEntry entry = diaryEntryRepository.findById(entryId)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
-        // Verificar que la entrada pertenece al usuario
         if (!entry.getUser().getId_user().equals(user.getId_user())) {
             throw new IllegalArgumentException("No tienes permiso para eliminar esta entrada");
         }
         diaryEntryRepository.delete(entry);
     }
+
     @Override
     public DiaryEntry getEntryByDate(String userEmail, String date) {
         User user = userService.findByEmail(userEmail);
@@ -116,7 +115,6 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
 
     @Override
     public List<DiaryEntry> getEntriesForPatient(String psychologistEmail, Long patientId) {
-        // Obtener la entidad del psicólogo a partir del email
         User psychologist = userService.findByEmail(psychologistEmail);
         if (psychologist == null) {
             throw new EntityNotFoundException("Psicólogo no encontrado con email: " + psychologistEmail);
@@ -124,12 +122,10 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         if (!psychologist.getRole().equals(Role.PSYCHOLOGIST)) {
             throw new IllegalArgumentException("El usuario no tiene rol PSYCHOLOGIST");
         }
-        // Obtener la entidad del paciente usando su id
         User patient = userService.findByIdEntity(patientId);
         if (patient == null) {
             throw new EntityNotFoundException("Paciente no encontrado con id: " + patientId);
         }
-        // Validar que el paciente esté asignado al psicólogo
         if (!psychologist.getPatients().contains(patient)) {
             throw new IllegalArgumentException("El paciente no está asignado al psicólogo");
         }

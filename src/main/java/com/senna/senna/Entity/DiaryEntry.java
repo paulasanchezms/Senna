@@ -39,5 +39,7 @@ import java.util.Set;
         @ManyToOne
         @JoinColumn(name = "user_id")
         private User user; // Solo pacientes pueden tener entradas
+
+        private Integer moodLevel;
     }
 

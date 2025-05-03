@@ -11,4 +11,5 @@ public class DiaryEntryDTO {
     private List<Long> moodIds;
     private String notes;
     private LocalDate date;
+    private Integer moodLevel;
 }

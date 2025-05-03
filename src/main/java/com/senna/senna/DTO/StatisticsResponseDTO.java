@@ -17,4 +17,5 @@ public class StatisticsResponseDTO {
     private List<Integer> weeklyMoodLevels;
     private List<Integer> monthlyMoodLevels;
     private List<Integer> moodLevels;
+    private int daysInMonth;
 }

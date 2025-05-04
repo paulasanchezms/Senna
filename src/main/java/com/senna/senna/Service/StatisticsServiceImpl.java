@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
+import java.time.YearMonth;
+import java.time.temporal.WeekFields;
 import java.util.*;
 
 @Service
@@ -22,85 +23,127 @@ public class StatisticsServiceImpl implements StatisticsService {
         this.userService = userService;
     }
 
+    // ----------------– SEMANA ------------------
+
+    /** Devuelve la estadística de la semana actual */
     @Override
     public StatisticsResponseDTO getWeeklyStatistics(String userEmail) {
-        User user = userService.findByEmail(userEmail);
         LocalDate today = LocalDate.now();
-        LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-        LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY);
-
-        List<DiaryEntry> entries = diaryEntryRepository.findByUserAndDateBetween(user, startOfWeek, endOfWeek);
-
-        return calculateStatistics(entries, true);
+        WeekFields wf = WeekFields.ISO;
+        int currentWeek = today.get(wf.weekOfYear());
+        int currentYear = today.getYear();
+        return getWeeklyStatistics(userEmail, currentYear, currentWeek);
     }
 
+    /**
+     * Navega a cualquier semana del año
+     * @param userEmail   email del usuario
+     * @param year        año (ej. 2025)
+     * @param weekOfYear  número de semana ISO (1–53)
+     */
+    public StatisticsResponseDTO getWeeklyStatistics(String userEmail, int year, int weekOfYear) {
+        User user = userService.findByEmail(userEmail);
+
+        WeekFields wf = WeekFields.ISO;
+
+        LocalDate monday = LocalDate
+                .of(year, 1, 4)   // 4 de enero siempre pertenece a la semana 1 ISO
+                .with(wf.weekOfYear(), weekOfYear)
+                .with(wf.dayOfWeek(), DayOfWeek.MONDAY.getValue());
+        LocalDate sunday = monday.plusDays(6);
+
+        List<DiaryEntry> entries = diaryEntryRepository
+                .findByUserAndDateBetween(user, monday, sunday);
+
+        return calculateStatistics(entries, true, monday, sunday);
+    }
+    // --------------- MES ----------------------
+
+    /** Devuelve la estadística del mes actual */
     @Override
     public StatisticsResponseDTO getMonthlyStatistics(String userEmail) {
-        User user = userService.findByEmail(userEmail);
         LocalDate today = LocalDate.now();
-
-        LocalDate startOfMonth = today.withDayOfMonth(1);
-        LocalDate endOfMonth = today.withDayOfMonth(today.lengthOfMonth());
-
-        List<DiaryEntry> entries = diaryEntryRepository.findByUserAndDateBetween(user, startOfMonth, endOfMonth);
-
-        // Filtrar solo entradas del mes actual por seguridad
-        List<DiaryEntry> filteredEntries = entries.stream()
-                .filter(e -> e.getDate().getMonth().equals(today.getMonth()))
-                .toList();
-
-        return calculateStatistics(filteredEntries, false);
+        return getMonthlyStatistics(userEmail, today.getYear(), today.getMonthValue());
     }
 
-    private StatisticsResponseDTO calculateStatistics(List<DiaryEntry> entries, boolean isWeekly) {
+    /**
+     * Navega a cualquier mes de un año
+     * @param userEmail   email del usuario
+     * @param year        año (ej. 2025)
+     * @param month       mes 1–12
+     */
+    public StatisticsResponseDTO getMonthlyStatistics(String userEmail, int year, int month) {
+        User user = userService.findByEmail(userEmail);
+
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDate startOfMonth = ym.atDay(1);
+        LocalDate endOfMonth   = ym.atEndOfMonth();
+
+        List<DiaryEntry> entries = diaryEntryRepository
+                .findByUserAndDateBetween(user, startOfMonth, endOfMonth);
+
+        return calculateStatistics(entries, false, startOfMonth, endOfMonth);
+    }
+
+    // ------------- CÁLCULO COMÚN ----------------
+
+    /**
+     * @param entries     todas las entradas en el rango
+     * @param isWeekly    true si es semanal (7 días), false si es mensual
+     * @param start       inicio del periodo (lunes o día 1 del mes)
+     * @param end         fin del periodo (domingo o último día del mes)
+     */
+    private StatisticsResponseDTO calculateStatistics(
+            List<DiaryEntry> entries,
+            boolean isWeekly,
+            LocalDate start,
+            LocalDate end
+    ) {
         int totalEntries = entries.size();
         Map<String, Long> moodCounts = new HashMap<>();
         Map<String, Long> symptomCounts = new HashMap<>();
 
-        List<Integer> weeklyMoodLevels = new ArrayList<>(Collections.nCopies(7, 0));
-        List<Integer> weeklyCounts = new ArrayList<>(Collections.nCopies(7, 0));
-
-        int daysInMonth = LocalDate.now().lengthOfMonth();
-        List<Integer> monthlyMoodLevels = new ArrayList<>(Collections.nCopies(daysInMonth, 0));
-        List<Integer> monthlyCounts = new ArrayList<>(Collections.nCopies(daysInMonth, 0));
-
-        for (DiaryEntry entry : entries) {
-            entry.getMoods().forEach(mood ->
-                    moodCounts.put(mood.getName(), moodCounts.getOrDefault(mood.getName(), 0L) + 1)
+        // Contadores de moods/síntomas
+        for (DiaryEntry e : entries) {
+            e.getMoods().forEach(m ->
+                    moodCounts.merge(m.getName(), 1L, Long::sum)
             );
-            entry.getSymptoms().forEach(symptom ->
-                    symptomCounts.put(symptom.getName(), symptomCounts.getOrDefault(symptom.getName(), 0L) + 1)
+            e.getSymptoms().forEach(s ->
+                    symptomCounts.merge(s.getName(), 1L, Long::sum)
             );
+        }
 
-            if (entry.getMoodLevel() != null) {
-                int dayOfWeek = entry.getDate().getDayOfWeek().getValue() - 1;  // lunes=0
-                int dayOfMonth = entry.getDate().getDayOfMonth() - 1;           // día 1 = índice 0
+        // Inicializamos arrays
+        int periodLength = (int) (end.toEpochDay() - start.toEpochDay()) + 1;
+        // si isWeekly==true → periodLength==7
+        List<Integer> moodLevels  = new ArrayList<>(Collections.nCopies(periodLength, 0));
+        List<Integer> counts      = new ArrayList<>(Collections.nCopies(periodLength, 0));
 
-                if (isWeekly) {
-                    weeklyMoodLevels.set(dayOfWeek, weeklyMoodLevels.get(dayOfWeek) + entry.getMoodLevel());
-                    weeklyCounts.set(dayOfWeek, weeklyCounts.get(dayOfWeek) + 1);
-                } else {
-                    if (dayOfMonth < daysInMonth) {
-                        monthlyMoodLevels.set(dayOfMonth, monthlyMoodLevels.get(dayOfMonth) + entry.getMoodLevel());
-                        monthlyCounts.set(dayOfMonth, monthlyCounts.get(dayOfMonth) + 1);
-                    }
-                }
+        // Sumamos niveles por día índice
+        for (DiaryEntry e : entries) {
+            if (e.getMoodLevel() == null) continue;
+            int idx;
+            if (isWeekly) {
+                // lunes = índice 0  … domingo = 6
+                idx = e.getDate().getDayOfWeek().getValue() - 1;
+            } else {
+                // día del mes 1→idx0, 2→idx1…
+                idx = e.getDate().getDayOfMonth() - 1;
+            }
+            moodLevels.set(idx, moodLevels.get(idx) + e.getMoodLevel());
+            counts.set(idx,     counts.get(idx)     + 1);
+        }
+
+        // Convertimos sumas a promedios
+        for (int i = 0; i < periodLength; i++) {
+            if (counts.get(i) > 0) {
+                moodLevels.set(i, moodLevels.get(i) / counts.get(i));
             }
         }
 
-        // Calcular promedios semanales
-        for (int i = 0; i < weeklyMoodLevels.size(); i++) {
-            if (weeklyCounts.get(i) > 0) {
-                weeklyMoodLevels.set(i, weeklyMoodLevels.get(i) / weeklyCounts.get(i));
-            }
-        }
-
-        // Calcular promedios mensuales
-        for (int i = 0; i < monthlyMoodLevels.size(); i++) {
-            if (monthlyCounts.get(i) > 0) {
-                monthlyMoodLevels.set(i, monthlyMoodLevels.get(i) / monthlyCounts.get(i));
-            }
-        }
+        // Para la respuesta, rellenamos explícitamente ambos arrays
+        List<Integer> weeklyMoodLevels  = isWeekly ? moodLevels : Collections.emptyList();
+        List<Integer> monthlyMoodLevels = isWeekly ? Collections.emptyList() : moodLevels;
 
         return new StatisticsResponseDTO(
                 totalEntries,
@@ -109,7 +152,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                 weeklyMoodLevels,
                 monthlyMoodLevels,
                 Collections.emptyList(),
-                daysInMonth
+                periodLength
         );
     }
 }

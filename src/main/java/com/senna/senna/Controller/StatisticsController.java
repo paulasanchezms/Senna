@@ -17,17 +17,43 @@ public class StatisticsController {
         this.statisticsService = statisticsService;
     }
 
+    /**
+     * /api/statistics/weekly?year=2025&week=18
+     * si no mandas year+week devuelve la semana actual
+     */
     @GetMapping("/weekly")
     public ResponseEntity<StatisticsResponseDTO> getWeeklyStatistics(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        StatisticsResponseDTO stats = statisticsService.getWeeklyStatistics(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(value = "year", required = false) Integer year,
+            @RequestParam(value = "week", required = false) Integer week
+    ) {
+        String email = userDetails.getUsername();
+        StatisticsResponseDTO stats;
+        if (year != null && week != null) {
+            stats = statisticsService.getWeeklyStatistics(email, year, week);
+        } else {
+            stats = statisticsService.getWeeklyStatistics(email);
+        }
         return ResponseEntity.ok(stats);
     }
 
+    /**
+     * /api/statistics/monthly?year=2025&month=5
+     * si no mandas year+month devuelve el mes actual
+     */
     @GetMapping("/monthly")
     public ResponseEntity<StatisticsResponseDTO> getMonthlyStatistics(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        StatisticsResponseDTO stats = statisticsService.getMonthlyStatistics(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(value = "year", required = false) Integer year,
+            @RequestParam(value = "month", required = false) Integer month
+    ) {
+        String email = userDetails.getUsername();
+        StatisticsResponseDTO stats;
+        if (year != null && month != null) {
+            stats = statisticsService.getMonthlyStatistics(email, year, month);
+        } else {
+            stats = statisticsService.getMonthlyStatistics(email);
+        }
         return ResponseEntity.ok(stats);
     }
 }

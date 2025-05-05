@@ -12,4 +12,5 @@ public class DiaryEntryResponseDTO {
     private List<SymptomDTO> symptoms;
     private String notes;
     private UserResponseDTO user;
+    private Integer moodLevel;
 }

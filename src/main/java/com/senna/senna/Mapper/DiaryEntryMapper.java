@@ -18,6 +18,7 @@ public class DiaryEntryMapper {
         dto.setId(entry.getId());
         dto.setDate(entry.getDate());
         dto.setNotes(entry.getNotes());
+        dto.setMoodLevel(entry.getMoodLevel());
 
         // Map user
         UserResponseDTO userDTO = UserMapper.toResponseDTO(entry.getUser());

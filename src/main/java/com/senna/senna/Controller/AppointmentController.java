@@ -1,75 +1,120 @@
 package com.senna.senna.Controller;
 
-import com.senna.senna.DTO.AppointmentDTO;
 import com.senna.senna.DTO.AppointmentResponseDTO;
+import com.senna.senna.DTO.CreateAppointmentDTO;
 import com.senna.senna.Entity.Appointment;
+import com.senna.senna.Entity.AppointmentStatus;
+import com.senna.senna.Entity.User;
 import com.senna.senna.Mapper.AppointmentMapper;
-import com.senna.senna.Service.AppointmentService;
+import com.senna.senna.Repository.AppointmentRepository;
+import com.senna.senna.Repository.UserRepository;
+import com.senna.senna.Service.AppointmentServiceImpl;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Controller REST para gestión de citas.
+ */
 @RestController
 @RequestMapping("/api/appointments")
 public class AppointmentController {
 
-    private final AppointmentService appointmentService;
+    private final AppointmentServiceImpl appointmentService;
+    private final UserRepository userRepository;
+    private final AppointmentRepository appointmentRepository;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(AppointmentServiceImpl appointmentService, UserRepository userRepository, AppointmentRepository appointmentRepository) {
         this.appointmentService = appointmentService;
+        this.userRepository = userRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
-    // Crear (o agendar) una cita. Supongamos que este endpoint es usado por un paciente.
+    /**
+     * Programa una nueva cita. El paciente autenticado reserva.
+     */
+
     @PostMapping
     public ResponseEntity<AppointmentResponseDTO> scheduleAppointment(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody AppointmentDTO dto) {
-        // Aquí pasamos el email del paciente para asignarlo a la cita.
-        Appointment appointment = appointmentService.scheduleAppointment(userDetails.getUsername(), dto);
-        AppointmentResponseDTO response = AppointmentMapper.toResponseDTO(appointment);
+            @RequestBody CreateAppointmentDTO dto) {
+
+        User patient = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado: " + userDetails.getUsername()));
+
+        dto.setPatientId(patient.getId());
+
+        AppointmentResponseDTO response = appointmentService.scheduleAppointment(dto);
         return ResponseEntity.status(201).body(response);
     }
 
-    // Actualizar una cita existente
+    /**
+     * Actualiza una cita existente.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentResponseDTO> updateAppointment(
             @PathVariable Long id,
-            @RequestBody AppointmentDTO dto) {
-        Appointment updated = appointmentService.updateAppointment(id, dto);
-        AppointmentResponseDTO response = AppointmentMapper.toResponseDTO(updated);
-        return ResponseEntity.ok(response);
+            @RequestBody CreateAppointmentDTO dto) {
+        AppointmentResponseDTO updated = appointmentService.updateAppointment(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
-    // Cancelar una cita (cambiar su estado a CANCELADA)
+    /**
+     * Cancela una cita.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelAppointment(@PathVariable Long id) {
         appointmentService.cancelAppointment(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Consultar citas para un paciente (endpoint para un paciente)
+    /**
+     * Lista las citas del paciente autenticado.
+     */
     @GetMapping("/patient")
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsForPatient(
             @AuthenticationPrincipal UserDetails userDetails) {
-        List<Appointment> appointments = appointmentService.getAppointmentsForPatient(userDetails.getUsername());
-        List<AppointmentResponseDTO> response = appointments.stream()
-                .map(AppointmentMapper::toResponseDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
 
-    // Consultar citas para un psicólogo
+        User patient = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado: " + userDetails.getUsername()));
+
+        Long patientId = patient.getId();
+        List<AppointmentResponseDTO> list = appointmentService.getAppointmentsForPatient(patientId);
+        return ResponseEntity.ok(list);
+    }
+    /**
+     * Lista las citas del psicólogo autenticado.
+     */
     @GetMapping("/psychologist")
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsForPsychologist(
             @AuthenticationPrincipal UserDetails userDetails) {
-        List<Appointment> appointments = appointmentService.getAppointmentsForPsychologist(userDetails.getUsername());
-        List<AppointmentResponseDTO> response = appointments.stream()
-                .map(AppointmentMapper::toResponseDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+
+        User psychologist = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + userDetails.getUsername()));
+
+        Long psychologistId = psychologist.getId();
+        List<AppointmentResponseDTO> list = appointmentService.getAppointmentsForPsychologist(psychologistId);
+        return ResponseEntity.ok(list);
+    }
+    /**
+     * Obtiene franjas libres para el psicólogo autenticado en una fecha.
+     */
+    @GetMapping("/available-times")
+    public ResponseEntity<List<String>> getAvailableTimes(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("date") LocalDate date) {
+
+        User psychologist = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + userDetails.getUsername()));
+
+        Long psychologistId = psychologist.getId();
+        List<String> slots = appointmentService.getAvailableTimes(psychologistId, date);
+        return ResponseEntity.ok(slots);
     }
 }

@@ -16,6 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Buscar todos los usuarios por rol
     List<User> findByRole(Role role);
 
-    // Buscar psicólogos por especialidad
-    List<User> findByRoleAndSpecialtyContainingIgnoreCase(Role role, String specialty);
+    List<User> findByRoleAndProfileSpecialtyContainingIgnoreCase(Role role, String specialty);
+
 }

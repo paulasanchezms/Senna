@@ -5,8 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "appointments")
@@ -16,25 +16,24 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private LocalDateTime dateTime;
-
-    // Por ejemplo, en minutos o como un campo específico
-    private Integer duration;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private AppointmentStatus status;  // Por ejemplo, PENDIENTE, CONFIRMADA, CANCELADA
-
-    private String description;
-
-    // Paciente que reserva la cita.
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     private User patient;
 
-    // Psicólogo asignado a la cita.
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "psychologist_id", nullable = false)
     private User psychologist;
+
+    @Column(name = "date_time", nullable = false)
+    private LocalDateTime dateTime;
+
+    @Column(nullable = false)
+    private Integer duration; // en minutos
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private AppointmentStatus status;
+
+    @Column(length = 500)
+    private String description;
 }

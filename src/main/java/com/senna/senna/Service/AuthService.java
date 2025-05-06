@@ -6,6 +6,6 @@ import com.senna.senna.DTO.CreateUserDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface AuthService {
-    AuthResponse register(CreateUserDTO dto, MultipartFile document) throws Exception;
+    AuthResponse register(CreateUserDTO dto) throws Exception;
     AuthResponse login(AuthRequest authRequest) throws Exception;
 }

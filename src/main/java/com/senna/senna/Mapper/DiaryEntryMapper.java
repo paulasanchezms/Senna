@@ -29,7 +29,7 @@ public class DiaryEntryMapper {
                 .stream()
                 .map(DiaryEntryMapper::toMoodDTO)
                 .collect(Collectors.toList());
-        dto.setMood(moodDTOs);
+        dto.setMoods(moodDTOs);
 
         // Map symptoms
         List<SymptomDTO> symptomDTOs = entry.getSymptoms()

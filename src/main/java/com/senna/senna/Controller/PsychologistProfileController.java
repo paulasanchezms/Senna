@@ -54,16 +54,5 @@ public class PsychologistProfileController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Actualiza únicamente las franjas horarias del psicólogo.
-     */
-    @PutMapping("/hours")
-    public ResponseEntity<Void> updateWorkingHours(
-            @PathVariable Long userId,
-            @RequestBody List<WorkingHourDTO> hours
-    ) {
-        profileService.updateWorkingHours(userId, hours);
-        return ResponseEntity.noContent().build();
-    }
 
 }

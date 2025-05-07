@@ -11,4 +11,5 @@ public interface WorkingHourService {
     WorkingHourDTO createWorkingHour(Long userId, WorkingHourDTO dto);
     WorkingHourDTO updateWorkingHour(Long userId, Long hourId, WorkingHourDTO dto);
     void deleteWorkingHour(Long userId, Long hourId);
+    List<WorkingHourDTO> replaceWorkingHours(Long userId, List<WorkingHourDTO> hoursDto);
 }

@@ -11,6 +11,7 @@ import com.senna.senna.Repository.UserRepository;
 import com.senna.senna.Service.AppointmentServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller REST para gestión de citas.
@@ -115,6 +117,19 @@ public class AppointmentController {
 
         Long psychologistId = psychologist.getId();
         List<String> slots = appointmentService.getAvailableTimes(psychologistId, date);
+        return ResponseEntity.ok(slots);
+    }
+
+    @GetMapping("/available-times/week")
+    public ResponseEntity<Map<LocalDate, List<String>>> getAvailableTimesForWeek(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        User psychologist = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + userDetails.getUsername()));
+
+        Map<LocalDate, List<String>> slots = appointmentService.getAvailableTimesForWeek(psychologist.getId(), startDate, endDate);
         return ResponseEntity.ok(slots);
     }
 }

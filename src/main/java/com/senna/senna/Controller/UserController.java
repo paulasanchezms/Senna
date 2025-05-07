@@ -6,6 +6,7 @@ import com.senna.senna.DTO.UserResponseDTO;
 import com.senna.senna.Service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -87,5 +88,14 @@ public class UserController {
             @RequestParam String specialty
     ) {
         return ResponseEntity.ok(userServiceImpl.getPsychologistsBySpecialty(specialty));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getCurrentUser(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails
+    ) {
+        return userServiceImpl.getUserByEmail(userDetails.getUsername())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

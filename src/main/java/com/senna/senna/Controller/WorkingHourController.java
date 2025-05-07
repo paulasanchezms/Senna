@@ -3,7 +3,6 @@ package com.senna.senna.Controller;
 import com.senna.senna.DTO.WorkingHourDTO;
 import com.senna.senna.Service.WorkingHourService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +17,21 @@ import java.util.List;
 public class WorkingHourController {
 
     private final WorkingHourService hourService;
+
+    /**
+     * Reemplaza todas las franjas del psicólogo por las recibidas.
+     */
+    @PutMapping
+    public ResponseEntity<List<WorkingHourDTO>> replaceHours(
+            @PathVariable Long userId,
+            @RequestBody List<WorkingHourDTO> hoursDto
+    ) {
+        // Borra y vuelve a crear todas las franjas de golpe
+        hourService.replaceWorkingHours(userId, hoursDto);
+        // Recupera la lista actualizada
+        List<WorkingHourDTO> updated = hourService.getWorkingHours(userId);
+        return ResponseEntity.ok(updated);
+    }
 
     /**
      * Lista todas las franjas del perfil de un psicólogo.
@@ -37,11 +51,11 @@ public class WorkingHourController {
             @RequestBody WorkingHourDTO dto
     ) {
         WorkingHourDTO created = hourService.createWorkingHour(userId, dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(201).body(created);
     }
 
     /**
-     * Actualiza una franja existente.
+     * Actualiza una franja existente (solo un slot).
      */
     @PutMapping("/{hourId}")
     public ResponseEntity<WorkingHourDTO> updateHour(

@@ -78,4 +78,29 @@ public class WorkingHourServiceImpl implements WorkingHourService {
         }
         hourRepo.delete(wh);
     }
+    /** Reemplaza todas las franjas de un psicólogo. */
+    @Override
+    public List<WorkingHourDTO> replaceWorkingHours(Long userId, List<WorkingHourDTO> hoursDto) {
+        // 1) Obtengo perfil
+        PsychologistProfile profile = profileRepo.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado: " + userId));
+        // 2) Limpio las existentes
+        profile.getWorkingHours().clear();
+        // 3) Construyo y agrego las nuevas
+        List<WorkingHour> nuevos = hoursDto.stream().map(dto -> {
+            WorkingHour wh = new WorkingHour();
+            wh.setProfile(profile);
+            wh.setDayOfWeek(dto.getDayOfWeek());
+            wh.setStartTime(LocalTime.parse(dto.getStartTime()));
+            wh.setEndTime(LocalTime.parse(dto.getEndTime()));
+            return wh;
+        }).collect(Collectors.toList());
+        profile.getWorkingHours().addAll(nuevos);
+        // 4) Salvo perfil (cascade persiste las horas)
+        PsychologistProfile saved = profileRepo.save(profile);
+        // 5) Devuelvo DTOs
+        return saved.getWorkingHours().stream()
+                .map(WorkingHourMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

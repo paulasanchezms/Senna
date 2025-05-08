@@ -160,4 +160,13 @@ public class AppointmentController {
 
         return ResponseEntity.ok(patients);
     }
+
+    @GetMapping("/psychologists/{id}/available-times")
+    public ResponseEntity<List<String>> getAvailableTimesForPsychologistId(
+            @PathVariable Long id,
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        List<String> slots = appointmentService.getAvailableTimes(id, date);
+        return ResponseEntity.ok(slots);
+    }
 }

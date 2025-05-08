@@ -20,7 +20,7 @@ public class UserMapper {
 
     public static UserResponseDTO toResponseDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
-        dto.setId_user(user.getId());            // getIdUser()
+        dto.setId_user(user.getId());
         dto.setName(user.getName());
         // Usamos getLastName() de la entidad
         dto.setLast_name(user.getLastName());

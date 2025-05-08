@@ -4,6 +4,9 @@ import com.senna.senna.DTO.AppointmentResponseDTO;
 import com.senna.senna.DTO.CreateAppointmentDTO;
 import com.senna.senna.Entity.Appointment;
 import com.senna.senna.Entity.User;
+import com.senna.senna.DTO.UserResponseDTO;
+import com.senna.senna.Mapper.UserMapper;
+
 
 /**
  * Mapper para convertir entre la entidad Appointment y sus DTOs.
@@ -16,6 +19,7 @@ public class AppointmentMapper {
     public static AppointmentResponseDTO toDTO(Appointment appointment) {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
         dto.setId(appointment.getId());
+        dto.setPatient(UserMapper.toResponseDTO(appointment.getPatient()));
         dto.setPatientId(appointment.getPatient().getId());
         dto.setPsychologistId(appointment.getPsychologist().getId());
         dto.setDateTime(appointment.getDateTime());

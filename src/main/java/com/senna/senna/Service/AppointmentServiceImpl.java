@@ -2,12 +2,14 @@ package com.senna.senna.Service;
 
 import com.senna.senna.DTO.AppointmentResponseDTO;
 import com.senna.senna.DTO.CreateAppointmentDTO;
+import com.senna.senna.DTO.UserResponseDTO;
 import com.senna.senna.Entity.Appointment;
 import com.senna.senna.Entity.AppointmentStatus;
 import com.senna.senna.Entity.PsychologistProfile;
 
 import com.senna.senna.Entity.User;
 import com.senna.senna.Mapper.AppointmentMapper;
+import com.senna.senna.Mapper.UserMapper;
 import com.senna.senna.Repository.AppointmentRepository;
 import com.senna.senna.Repository.PsychologistProfileRepository;
 import com.senna.senna.Repository.UserRepository;
@@ -172,5 +174,48 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         return available;
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AppointmentResponseDTO> getPendingAppointmentsForPsychologist(Long psychologistId) {
+        User psychologist = userRepo.findById(psychologistId)
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + psychologistId));
+
+        return appointmentRepo.findByPsychologistAndStatus(psychologist, AppointmentStatus.PENDIENTE)
+                .stream()
+                .map(AppointmentMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void acceptAppointment(Long appointmentId) {
+        Appointment ap = appointmentRepo.findById(appointmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada: " + appointmentId));
+        ap.setStatus(AppointmentStatus.CONFIRMADA);
+        appointmentRepo.save(ap);
+    }
+
+    @Override
+    @Transactional
+    public void rejectAppointment(Long appointmentId) {
+        Appointment ap = appointmentRepo.findById(appointmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada: " + appointmentId));
+        ap.setStatus(AppointmentStatus.CANCELADA);
+        appointmentRepo.save(ap);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getPatientsForPsychologist(Long psychologistId) {
+        User psychologist = userRepo.findById(psychologistId)
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado"));
+
+        return appointmentRepo.findByPsychologist(psychologist).stream()
+                .map(Appointment::getPatient)
+                .distinct()
+                .map(UserMapper::toResponseDTO)
+                .toList();
     }
 }

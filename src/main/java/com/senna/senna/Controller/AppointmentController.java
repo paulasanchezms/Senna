@@ -2,6 +2,7 @@ package com.senna.senna.Controller;
 
 import com.senna.senna.DTO.AppointmentResponseDTO;
 import com.senna.senna.DTO.CreateAppointmentDTO;
+import com.senna.senna.DTO.UserResponseDTO;
 import com.senna.senna.Entity.Appointment;
 import com.senna.senna.Entity.AppointmentStatus;
 import com.senna.senna.Entity.User;
@@ -131,5 +132,32 @@ public class AppointmentController {
 
         Map<LocalDate, List<String>> slots = appointmentService.getAvailableTimesForWeek(psychologist.getId(), startDate, endDate);
         return ResponseEntity.ok(slots);
+    }
+
+    @GetMapping("/psychologist/{id}/pending")
+    public List<AppointmentResponseDTO> getPendingAppointments(@PathVariable Long id) {
+        return appointmentService.getPendingAppointmentsForPsychologist(id);
+    }
+
+    @PostMapping("/{id}/accept")
+    public void acceptAppointment(@PathVariable Long id) {
+        appointmentService.acceptAppointment(id);
+    }
+
+    @PostMapping("/{id}/reject")
+    public void rejectAppointment(@PathVariable Long id) {
+        appointmentService.rejectAppointment(id);
+    }
+
+    @GetMapping("/psychologist/patients")
+    public ResponseEntity<List<UserResponseDTO>> getPatientsOfPsychologist(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User psychologist = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado"));
+
+        List<UserResponseDTO> patients = appointmentService.getPatientsForPsychologist(psychologist.getId());
+
+        return ResponseEntity.ok(patients);
     }
 }

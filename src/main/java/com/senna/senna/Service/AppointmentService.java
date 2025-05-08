@@ -38,4 +38,19 @@ public interface AppointmentService {
      * Lista horas disponibles para un psicólogo en una fecha dada.
      */
     List<String> getAvailableTimes(Long psychologistId, LocalDate date);
+
+    /**
+     * Obtiene las citas pendientes de un psicólogo.
+     */
+    List<AppointmentResponseDTO> getPendingAppointmentsForPsychologist(Long psychologistId);
+
+    /**
+     * Acepta una cita pendiente.
+     */
+    void acceptAppointment(Long appointmentId);
+
+    /**
+     * Rechaza una cita pendiente.
+     */
+    void rejectAppointment(Long appointmentId);
 }

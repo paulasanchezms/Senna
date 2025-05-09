@@ -3,89 +3,99 @@ package com.senna.senna.Controller;
 import com.senna.senna.DTO.CreateUserDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
-import com.senna.senna.Service.UserService;
+import com.senna.senna.Service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
+    private final UserServiceImpl userServiceImpl;
 
-    private final UserService userService;
-
-    // Crear usuario
+    /** Crea un usuario (paciente o psicólogo). No incluye perfil profesional */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody CreateUserDTO dto) {
-        UserResponseDTO created = userService.createUser(dto);
+        UserResponseDTO created = userServiceImpl.createUser(dto);
         return ResponseEntity.ok(created);
     }
 
-    // Obtener todos los usuarios
+    /** Listado completo de usuarios (sin datos de perfil) */
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        List<UserResponseDTO> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userServiceImpl.getAllUsers());
     }
 
-    // Obtener por ID
+    /** Lista todos los usuarios con rol PSYCHOLOGIST */
+    @GetMapping("/psychologists")
+    public ResponseEntity<List<UserResponseDTO>> getAllPsychologists() {
+        return ResponseEntity.ok(userServiceImpl.getAllPsychologists());
+    }
+
+    /** Lista todos los usuarios con rol PATIENT */
+    @GetMapping("/patients")
+    public ResponseEntity<List<UserResponseDTO>> getAllPatients() {
+        return ResponseEntity.ok(userServiceImpl.getAllPatients());
+    }
+
+    /** Consulta un usuario por su ID */
     @GetMapping("/by-id/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
-        UserResponseDTO user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userServiceImpl.getUserById(id));
     }
 
-    // Obtener por email
+    /** Consulta un usuario por email */
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
-        Optional<UserResponseDTO> user = userService.getUserByEmail(email);
-        return user.map(ResponseEntity::ok)
+        return userServiceImpl.getUserByEmail(email)
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Obtener todos los psicólogos
-    @GetMapping("/psychologists")
-    public ResponseEntity<List<UserResponseDTO>> getAllPsychologists() {
-        List<UserResponseDTO> psychologists = userService.getAllPsychologists();
-        return ResponseEntity.ok(psychologists);
-    }
-
-    // Buscar psicólogos por especialidad
-    @GetMapping("/psychologists/search")
-    public ResponseEntity<List<UserResponseDTO>> searchPsychologistsBySpecialty(@RequestParam String specialty) {
-        List<UserResponseDTO> result = userService.getPsychologistsBySpecialty(specialty);
-        return ResponseEntity.ok(result);
-    }
-
-    // Obtener todos los pacientes
-    @GetMapping("/patients")
-    public ResponseEntity<List<UserResponseDTO>> getAllPatients() {
-        List<UserResponseDTO> patients = userService.getAllPatients();
-        return ResponseEntity.ok(patients);
-    }
-
-    // Asignar paciente a psicólogo (nuevo mapping para evitar colisión)
-    @PostMapping("/assign-patient")
-    public ResponseEntity<String> assignPatientToPsychologist(@RequestParam Long psychologistId, @RequestParam Long patientId) {
-        userService.assignPatientToPsychologist(psychologistId, patientId);
-        return ResponseEntity.ok("Asignación realizada con éxito.");
-    }
-
-    // Actualizar usuario
+    /** Actualiza campos básicos de un usuario (sin tocar perfil profesional) */
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @RequestBody UpdateUserDTO dto) {
-        UserResponseDTO updated = userService.updateUser(id, dto);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<UserResponseDTO> updateUser(
+            @PathVariable Long id,
+            @RequestBody UpdateUserDTO dto
+    ) {
+        return ResponseEntity.ok(userServiceImpl.updateUser(id, dto));
     }
 
-    //Eliminar
+    /** Elimina un usuario */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.ok("Usuario eliminado correctamente.");
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userServiceImpl.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Asigna un paciente a un psicólogo (sigue aquí si quieres mantener esta lógica) */
+    @PostMapping("/{psychologistId}/patients/{patientId}")
+    public ResponseEntity<Void> assignPatientToPsychologist(
+            @PathVariable Long psychologistId,
+            @PathVariable Long patientId
+    ) {
+        userServiceImpl.assignPatientToPsychologist(psychologistId, patientId);
+        return ResponseEntity.ok().build();
+    }
+
+    /** Lista todos los psicólogos filtrados por especialidad */
+    @GetMapping("/psychologists/search")
+    public ResponseEntity<List<UserResponseDTO>> getPsychologistsBySpecialty(
+            @RequestParam String specialty
+    ) {
+        return ResponseEntity.ok(userServiceImpl.getPsychologistsBySpecialty(specialty));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getCurrentUser(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails
+    ) {
+        return userServiceImpl.getUserByEmail(userDetails.getUsername())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

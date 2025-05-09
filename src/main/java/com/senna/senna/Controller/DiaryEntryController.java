@@ -6,6 +6,7 @@ import com.senna.senna.Entity.DiaryEntry;
 import com.senna.senna.Mapper.DiaryEntryMapper;
 import com.senna.senna.Service.DiaryEntryService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Controller REST para entradas de diario.
+ */
 @RestController
 @RequestMapping("/api/diary")
 public class DiaryEntryController {
@@ -23,7 +27,10 @@ public class DiaryEntryController {
         this.diaryService = diaryService;
     }
 
-    // Crear una nueva entrada del diario
+    /**
+     * Crea o actualiza la entrada del paciente autenticado para la fecha dada.
+     */
+    @PreAuthorize("hasRole('PATIENT')")
     @PostMapping
     public ResponseEntity<DiaryEntryResponseDTO> saveEntry(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -33,7 +40,10 @@ public class DiaryEntryController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener todas las entradas del diario para el usuario autenticado
+    /**
+     * Lista todas las entradas del paciente autenticado.
+     */
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping
     public ResponseEntity<List<DiaryEntryResponseDTO>> getAllEntries(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -44,7 +54,10 @@ public class DiaryEntryController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener la entrada del diario para una fecha específica (formato ISO: yyyy-MM-dd)
+    /**
+     * Obtiene la entrada del paciente por fecha (ISO yyyy-MM-dd).
+     */
+    @PreAuthorize("hasRole('PATIENT')")
     @GetMapping("/date/{date}")
     public ResponseEntity<DiaryEntryResponseDTO> getEntryByDate(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -54,7 +67,10 @@ public class DiaryEntryController {
         return ResponseEntity.ok(response);
     }
 
-    // Actualizar una entrada existente del diario (por id)
+    /**
+     * Actualiza una entrada existente del diario (por id).
+     */
+    @PreAuthorize("hasRole('PATIENT')")
     @PutMapping("/entry/{id}")
     public ResponseEntity<DiaryEntryResponseDTO> updateEntry(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -65,7 +81,10 @@ public class DiaryEntryController {
         return ResponseEntity.ok(response);
     }
 
-    // Eliminar una entrada del diario (por id)
+    /**
+     * Elimina una entrada del diario (por id).
+     */
+    @PreAuthorize("hasRole('PATIENT')")
     @DeleteMapping("/entry/{id}")
     public ResponseEntity<Void> deleteEntry(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -74,7 +93,10 @@ public class DiaryEntryController {
         return ResponseEntity.noContent().build();
     }
 
-    // Endpoint para que un psicólogo consulte las entradas del diario de un paciente asignado
+    /**
+     * Endpoint para que un psicólogo consulte las entradas del diario de un paciente asignado.
+     */
+    @PreAuthorize("hasRole('PSYCHOLOGIST')")
     @GetMapping("/psychologist/patient/{patientId}")
     public ResponseEntity<List<DiaryEntryResponseDTO>> getEntriesForPatient(
             @AuthenticationPrincipal UserDetails userDetails,

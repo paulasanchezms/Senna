@@ -10,11 +10,4 @@ public class CreateUserDTO {
     private String email;
     private String password;
     private Role role;
-
-    // Solo si es PSYCHOLOGIST
-    private String dni;
-    private String qualification;
-    private String specialty;
-    private String location;
-    private String document;
 }

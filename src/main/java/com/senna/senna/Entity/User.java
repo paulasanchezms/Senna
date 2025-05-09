@@ -2,13 +2,18 @@ package com.senna.senna.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
-import java.util.Set;
-
+/**
+ * Usuario básico de la aplicación. Solo datos personales y credenciales.
+ */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"patients", "psychologists"})
+@AllArgsConstructor
+@EqualsAndHashCode(exclude = {"profile", "patients", "psychologists"})
 @Entity
 @Table(name = "users")
 public class User {
@@ -16,13 +21,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_user")
-    private Long id_user;
+    private Long id;
 
     @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "last_name", nullable = false)
-    private String last_name;
+    private String lastName;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -31,25 +36,31 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
-    // Campos exclusivos del rol PSYCHOLOGIST
-    private String dni; // Solo para psicólogos
-    private String qualification;
-    private String specialty;
-    private String location;
-    private String document;
+    /**
+     * Perfil profesional (si role = PSYCHOLOGIST)
+     */
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
+    private PsychologistProfile profile;
 
-    // Relaciones con pacientes (solo si este usuario es un psicólogo)
+    /**
+     * Relación paciente–psicólogo: solo si este usuario es psicólogo
+     */
     @ManyToMany
     @JoinTable(
             name = "psychologist_patient",
             joinColumns = @JoinColumn(name = "id_psychologist"),
             inverseJoinColumns = @JoinColumn(name = "id_patient")
     )
-    private Set<User> patients; // Solo para psicólogo
+    @ToString.Exclude
+    private List<User> patients;
 
-    // Relaciones con psicólogos (solo si este usuario es un paciente)
+    /**
+     * Relación psicólogo–paciente: solo si este usuario es paciente
+     */
     @ManyToMany(mappedBy = "patients")
-    private Set<User> psychologists; // Solo para paciente
+    @ToString.Exclude
+    private List<User> psychologists;
 }

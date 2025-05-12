@@ -3,6 +3,7 @@ package com.senna.senna.Controller;
 import com.senna.senna.DTO.AppointmentResponseDTO;
 import com.senna.senna.DTO.CreateAppointmentDTO;
 import com.senna.senna.DTO.UserResponseDTO;
+import com.senna.senna.Entity.Appointment;
 import com.senna.senna.Entity.AppointmentStatus;
 import com.senna.senna.Entity.User;
 import com.senna.senna.Mapper.AppointmentMapper;
@@ -17,6 +18,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -110,10 +113,15 @@ public class AppointmentController {
         User psychologist = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + userDetails.getUsername()));
 
-        return appointmentRepository.findByPsychologistAndStatus(psychologist, AppointmentStatus.PENDIENTE)
-                .stream()
-                .map(AppointmentMapper::toDTO)
-                .toList();
+        List<Appointment> appointments = appointmentRepository.findByPsychologistAndStatus(psychologist, AppointmentStatus.PENDIENTE);
+
+        // ✅ Mapa para evitar duplicados por ID
+        Map<Long, AppointmentResponseDTO> únicos = new LinkedHashMap<>();
+        for (Appointment a : appointments) {
+            únicos.putIfAbsent(a.getId(), AppointmentMapper.toDTO(a));
+        }
+
+        return new ArrayList<>(únicos.values());
     }
 
     @PostMapping("/{id}/accept")

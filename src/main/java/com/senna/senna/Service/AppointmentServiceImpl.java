@@ -40,6 +40,15 @@ public class AppointmentServiceImpl implements AppointmentService {
         User psychologist = userRepo.findById(dto.getPsychologistId())
                 .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + dto.getPsychologistId()));
 
+        boolean exists = appointmentRepo.existsByPsychologistAndPatientAndDateTimeAndStatusIn(
+                psychologist,
+                patient,
+                dto.getDateTime(),
+                List.of(AppointmentStatus.PENDIENTE, AppointmentStatus.CONFIRMADA)
+        );       if (exists) {
+            throw new IllegalStateException("Ya existe una cita para esa fecha y hora.");
+        }
+
         Appointment entity = AppointmentMapper.toEntity(dto, patient, psychologist);
         entity.setStatus(AppointmentStatus.PENDIENTE);
         Appointment saved = appointmentRepo.save(entity);

@@ -36,4 +36,12 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByPsychologistAndStatus(User psychologist, AppointmentStatus status);
 
-    List<Appointment> findByPsychologistIdAndDateTimeBetween(Long psychologistId, LocalDateTime start, LocalDateTime end);}
+    List<Appointment> findByPsychologistIdAndDateTimeBetween(Long psychologistId, LocalDateTime start, LocalDateTime end);
+
+    boolean existsByPsychologistAndPatientAndDateTimeAndStatusIn(
+            User psychologist,
+            User patient,
+            LocalDateTime dateTime,
+            List<AppointmentStatus> statuses
+    );
+}

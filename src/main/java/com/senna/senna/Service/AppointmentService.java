@@ -53,4 +53,6 @@ public interface AppointmentService {
      * Rechaza una cita pendiente.
      */
     void rejectAppointment(Long appointmentId);
+
+
 }

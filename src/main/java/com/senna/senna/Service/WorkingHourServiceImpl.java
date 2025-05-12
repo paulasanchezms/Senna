@@ -5,16 +5,19 @@ import com.senna.senna.Entity.PsychologistProfile;
 import com.senna.senna.Entity.User;
 import com.senna.senna.Entity.WorkingHour;
 import com.senna.senna.Mapper.WorkingHourMapper;
+import com.senna.senna.Repository.AppointmentRepository;
 import com.senna.senna.Repository.PsychologistProfileRepository;
 import com.senna.senna.Repository.UserRepository;
 import com.senna.senna.Repository.WorkingHourRepository;
-import com.senna.senna.Service.WorkingHourService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,7 @@ public class WorkingHourServiceImpl implements WorkingHourService {
     private final WorkingHourRepository hourRepo;
     private final PsychologistProfileRepository profileRepo;
     private final UserRepository userRepo;
+    private final AppointmentRepository appointmentRepo;
 
     @Override
     @Transactional(readOnly = true)
@@ -81,6 +85,9 @@ public class WorkingHourServiceImpl implements WorkingHourService {
     /** Reemplaza todas las franjas de un psicólogo. */
     @Override
     public List<WorkingHourDTO> replaceWorkingHours(Long userId, List<WorkingHourDTO> hoursDto) {
+
+        hourRepo.deleteByProfileUserId(userId);
+
         // 1) Obtengo perfil
         PsychologistProfile profile = profileRepo.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado: " + userId));
@@ -102,5 +109,45 @@ public class WorkingHourServiceImpl implements WorkingHourService {
         return saved.getWorkingHours().stream()
                 .map(WorkingHourMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<String> getAvailableSlots(Long userId, LocalDate date) {
+        // Obtener perfil
+        PsychologistProfile profile = profileRepo.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado: " + userId));
+
+        int duration = profile.getConsultationDuration();
+        int dayOfWeek = date.getDayOfWeek().getValue() - 1; // Lunes = 0, Domingo = 6
+
+        // Obtener franjas de ese día
+        List<WorkingHour> hours = hourRepo.findByProfileUserIdAndDayOfWeek(userId, dayOfWeek);
+
+        // Obtener citas ya reservadas de ese día
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        List<LocalTime> reservedTimes = appointmentRepo
+                .findByPsychologistIdAndDateTimeBetween(userId, startOfDay, endOfDay)
+                .stream()
+                .map(appt -> appt.getDateTime().toLocalTime())
+                .collect(Collectors.toList());
+
+        // Generar posibles bloques
+        List<String> slots = new ArrayList<>();
+        for (WorkingHour wh : hours) {
+            LocalTime start = wh.getStartTime();
+            LocalTime end = wh.getEndTime();
+
+            while (!start.plusMinutes(duration).isAfter(end)) {
+                if (!reservedTimes.contains(start)) {
+                    slots.add(start.toString().substring(0,5)); // HH:mm
+                }
+                start = start.plusMinutes(duration);
+            }
+        }
+
+        return slots;
     }
 }

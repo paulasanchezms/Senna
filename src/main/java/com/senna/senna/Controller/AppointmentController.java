@@ -141,4 +141,14 @@ public class AppointmentController {
         List<String> slots = appointmentService.getAvailableTimes(id, date);
         return ResponseEntity.ok(slots);
     }
+
+    @GetMapping("/psychologists/{id}/available-times/week")
+    public ResponseEntity<Map<LocalDate, List<String>>> getAvailableTimesForWeekById(
+            @PathVariable Long id,
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        Map<LocalDate, List<String>> slots = appointmentService.getAvailableTimesForWeek(id, startDate, endDate);
+        return ResponseEntity.ok(slots);
+    }
 }

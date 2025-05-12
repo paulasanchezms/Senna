@@ -3,9 +3,11 @@ package com.senna.senna.Controller;
 import com.senna.senna.DTO.WorkingHourDTO;
 import com.senna.senna.Service.WorkingHourService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -77,5 +79,14 @@ public class WorkingHourController {
     ) {
         hourService.deleteWorkingHour(userId, hourId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/availability")
+    public ResponseEntity<List<String>> getAvailableSlots(
+            @RequestParam Long psychologistId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        List<String> slots = hourService.getAvailableSlots(psychologistId, date);
+        return ResponseEntity.ok(slots);
     }
 }

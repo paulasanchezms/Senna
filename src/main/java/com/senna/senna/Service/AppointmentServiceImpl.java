@@ -235,4 +235,6 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .map(UserMapper::toResponseDTO)
                 .toList();
     }
+
+
 }

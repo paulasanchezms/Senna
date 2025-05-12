@@ -1,6 +1,9 @@
 package com.senna.senna.Service;
 
 import com.senna.senna.DTO.WorkingHourDTO;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -12,4 +15,5 @@ public interface WorkingHourService {
     WorkingHourDTO updateWorkingHour(Long userId, Long hourId, WorkingHourDTO dto);
     void deleteWorkingHour(Long userId, Long hourId);
     List<WorkingHourDTO> replaceWorkingHours(Long userId, List<WorkingHourDTO> hoursDto);
+    List<String> getAvailableSlots(Long userId, LocalDate date);
 }

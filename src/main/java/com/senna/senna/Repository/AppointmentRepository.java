@@ -35,4 +35,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     );
 
     List<Appointment> findByPsychologistAndStatus(User psychologist, AppointmentStatus status);
-}
+
+    List<Appointment> findByPsychologistIdAndDateTimeBetween(Long psychologistId, LocalDateTime start, LocalDateTime end);}

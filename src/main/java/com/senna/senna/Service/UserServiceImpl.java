@@ -1,5 +1,7 @@
 package com.senna.senna.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senna.senna.DTO.CreateUserDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
@@ -10,9 +12,24 @@ import com.senna.senna.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.io.*;
+import java.net.URI;
+import java.net.http.*;
+import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -102,5 +119,65 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByRoleAndProfileSpecialtyContainingIgnoreCase(Role.PSYCHOLOGIST, specialty).stream()
                 .map(UserMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    private static final String IMGBB_API_KEY = "T24a141e99bcbb243bbfab395507de11e";
+    private static final String BOUNDARY = "SennaUploadBoundary";
+
+    public String uploadImageToImgBB(MultipartFile image) {
+        try {
+            String apiKey = "24a141e99bcbb243bbfab395507de11e";
+            String uploadUrl = "https://api.imgbb.com/1/upload?key=" + apiKey;
+
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest.BodyPublisher body = HttpRequest.BodyPublishers.ofByteArray(image.getBytes());
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(uploadUrl))
+                    .header("Content-Type", "multipart/form-data;boundary=----SennaBoundary")
+                    .POST(ofMimeMultipartData(image, "image"))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Parsear JSON
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode json = mapper.readTree(response.body());
+
+            return json.get("data").get("url").asText();
+        } catch (Exception e) {
+            throw new RuntimeException("Error al subir la imagen a ImgBB", e);
+        }
+    }
+
+    private static HttpRequest.BodyPublisher ofMimeMultipartData(MultipartFile image, String fieldName) throws IOException {
+        String boundary = "----SennaBoundary";
+        var byteArrayOutputStream = new ByteArrayOutputStream();
+        var writer = new PrintWriter(new OutputStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8), true);
+
+        writer.append("--").append(boundary).append("\r\n");
+        writer.append("Content-Disposition: form-data; name=\"")
+                .append(fieldName).append("\"; filename=\"")
+                .append(image.getOriginalFilename()).append("\"\r\n");
+        writer.append("Content-Type: ").append(image.getContentType()).append("\r\n\r\n");
+        writer.flush();
+
+        byteArrayOutputStream.write(image.getBytes());
+        byteArrayOutputStream.flush();
+
+        writer.append("\r\n").flush();
+        writer.append("--").append(boundary).append("--").append("\r\n");
+        writer.close();
+
+        return HttpRequest.BodyPublishers.ofByteArray(byteArrayOutputStream.toByteArray());
+    }
+
+    public void updateUserByEmail(String email, UpdateUserDTO dto) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
+
+        UserMapper.updateUserFromDTO(user, dto);
+        userRepository.save(user);
     }
 }

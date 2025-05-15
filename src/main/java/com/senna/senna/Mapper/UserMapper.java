@@ -26,6 +26,8 @@ public class UserMapper {
         dto.setLast_name(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
+        dto.setPhone(user.getPhone());
+        dto.setPhotoUrl(user.getPhotoUrl());
         return dto;
     }
 
@@ -36,6 +38,12 @@ public class UserMapper {
         if (dto.getLast_name() != null) {
             // Nuevo setter camelCase
             user.setLastName(dto.getLast_name());
+        }
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+        if (dto.getPhotoUrl() != null) {
+            user.setPhotoUrl(dto.getPhotoUrl());
         }
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,10 +36,23 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO scheduleAppointment(CreateAppointmentDTO dto) {
+        LocalDateTime now = LocalDateTime.now();
+        if (dto.getDateTime().isBefore(now.plusHours(1))) {
+            throw new IllegalArgumentException("No se puede reservar una cita antes de 1 hora desde ahora.");
+        }
         User patient = userRepo.findById(dto.getPatientId())
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado: " + dto.getPatientId()));
         User psychologist = userRepo.findById(dto.getPsychologistId())
                 .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + dto.getPsychologistId()));
+
+        boolean exists = appointmentRepo.existsByPsychologistAndPatientAndDateTimeAndStatusIn(
+                psychologist,
+                patient,
+                dto.getDateTime(),
+                List.of(AppointmentStatus.PENDIENTE, AppointmentStatus.CONFIRMADA)
+        );       if (exists) {
+            throw new IllegalStateException("Ya existe una cita para esa fecha y hora.");
+        }
 
         Appointment entity = AppointmentMapper.toEntity(dto, patient, psychologist);
         entity.setStatus(AppointmentStatus.PENDIENTE);
@@ -61,6 +75,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         List<LocalTime> booked = appointmentRepo
                 .findByPsychologistAndDateTimeBetween(psychologist, startOfDay, endOfDay)
                 .stream()
+                .filter(ap -> ap.getStatus() == AppointmentStatus.PENDIENTE || ap.getStatus() == AppointmentStatus.CONFIRMADA)
                 .map(ap -> ap.getDateTime().toLocalTime())
                 .collect(Collectors.toList());
 
@@ -102,9 +117,14 @@ public class AppointmentServiceImpl implements AppointmentService {
         PsychologistProfile profile = profileRepo.findByUserIdWithWorkingHours(psychologist.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado para userId: " + psychologistId));
 
+        // Citas solo con estado PENDIENTE o CONFIRMADA
         List<Appointment> appointments = appointmentRepo.findByPsychologistAndDateTimeBetween(
-                psychologist, startDate.atStartOfDay(), endDate.atTime(23, 59));
+                        psychologist, startDate.atStartOfDay(), endDate.atTime(23, 59))
+                .stream()
+                .filter(ap -> ap.getStatus() == AppointmentStatus.PENDIENTE || ap.getStatus() == AppointmentStatus.CONFIRMADA)
+                .collect(Collectors.toList());
 
+        // Agrupar las horas reservadas por día
         Map<LocalDate, List<LocalTime>> bookedByDay = appointments.stream()
                 .collect(Collectors.groupingBy(
                         ap -> ap.getDateTime().toLocalDate(),
@@ -119,8 +139,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Map<LocalDate, List<String>> available = new HashMap<>();
 
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            final LocalDate currentDate = date; // ← ahora sí es final para la lambda
-
+            final LocalDate currentDate = date;
             int dow = currentDate.getDayOfWeek().getValue() % 7;
 
             List<String> slots = profile.getWorkingHours().stream()
@@ -136,12 +155,18 @@ public class AppointmentServiceImpl implements AppointmentService {
                         List<String> daySlots = new ArrayList<>();
 
                         while (!slot.isAfter(limit)) {
-                            boolean isBooked = bookedByDay.getOrDefault(currentDate, Collections.emptyList()).contains(slot);
+                            final LocalTime currentSlot = slot;
+                            boolean isBooked = bookedByDay.getOrDefault(currentDate, Collections.emptyList())
+                                    .stream()
+                                    .anyMatch(t -> t.truncatedTo(ChronoUnit.MINUTES).equals(currentSlot));
+
                             if (!isBooked) {
                                 daySlots.add(slot.toString());
                             }
+
                             slot = slot.plusMinutes(duration);
                         }
+
                         return daySlots.stream();
                     })
                     .sorted()
@@ -152,7 +177,6 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         return available;
     }
-
     @Override
     @Transactional
     public AppointmentResponseDTO updateAppointment(Long appointmentId, CreateAppointmentDTO dto) {

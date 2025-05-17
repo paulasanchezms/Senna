@@ -13,4 +13,5 @@ public class PsychologistProfileDTO {
     private String specialty;
     private String location;
     private List<WorkingHourDTO> workingHours;
-}
+    private String description;
+    private String document;}

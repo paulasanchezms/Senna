@@ -8,6 +8,7 @@ import com.senna.senna.Repository.WorkingHourCustomRepository;
 import com.senna.senna.Service.WorkingHourCustomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -31,6 +32,7 @@ public class WorkingHourCustomServiceImpl implements WorkingHourCustomService {
     }
 
     @Override
+    @Transactional
     public void replaceByDate(Long profileId, String dateStr, List<WorkingHourCustomDTO> dtos) {
         PsychologistProfile profile = profileRepo.findById(profileId).orElseThrow();
         LocalDate date = LocalDate.parse(dateStr);

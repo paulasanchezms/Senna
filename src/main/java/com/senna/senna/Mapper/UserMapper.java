@@ -1,6 +1,7 @@
 package com.senna.senna.Mapper;
 
 import com.senna.senna.DTO.CreateUserDTO;
+import com.senna.senna.DTO.PsychologistProfileDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
 import com.senna.senna.Entity.User;
@@ -28,6 +29,17 @@ public class UserMapper {
         dto.setRole(user.getRole());
         dto.setPhone(user.getPhone());
         dto.setPhotoUrl(user.getPhotoUrl());
+
+        if (user.getProfile() != null) {
+            PsychologistProfileDTO profileDTO = new PsychologistProfileDTO();
+            profileDTO.setConsultationDuration(user.getProfile().getConsultationDuration());
+            profileDTO.setConsultationPrice(user.getProfile().getConsultationPrice());
+            profileDTO.setSpecialty(user.getProfile().getSpecialty());
+            profileDTO.setLocation(user.getProfile().getLocation());
+            profileDTO.setDocument(user.getProfile().getDocument());
+            profileDTO.setDescription(user.getProfile().getDescription());
+            dto.setProfile(profileDTO);
+        }
         return dto;
     }
 

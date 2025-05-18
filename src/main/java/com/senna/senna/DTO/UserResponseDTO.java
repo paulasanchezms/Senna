@@ -15,4 +15,5 @@ public class UserResponseDTO {
     private Role role;
     private String phone;
     private String photoUrl;
+    private PsychologistProfileDTO profile;
 }

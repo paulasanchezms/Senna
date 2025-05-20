@@ -69,4 +69,10 @@ public class User {
     @ManyToMany(mappedBy = "patients")
     @ToString.Exclude
     private List<User> psychologists;
+
+    @OneToMany(mappedBy = "psychologist", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> receivedReviews;
+
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> givenReviews;
 }

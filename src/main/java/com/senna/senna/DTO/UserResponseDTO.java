@@ -16,4 +16,6 @@ public class UserResponseDTO {
     private String phone;
     private String photoUrl;
     private PsychologistProfileDTO profile;
+    private Double averageRating;
+    private Integer totalReviews;
 }

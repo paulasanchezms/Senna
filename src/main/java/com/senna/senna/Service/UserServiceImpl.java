@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senna.senna.DTO.CreateUserDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
+import com.senna.senna.Entity.Review;
 import com.senna.senna.Entity.Role;
 import com.senna.senna.Entity.User;
 import com.senna.senna.Mapper.UserMapper;
+import com.senna.senna.Repository.ReviewRepository;
 import com.senna.senna.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
 
     @Override
     public UserResponseDTO createUser(CreateUserDTO dto) {
@@ -47,14 +50,14 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(UserMapper::toResponseDTO)
+                .map(this::mapUserToDTOWithReviewStats)
                 .collect(Collectors.toList());
     }
 
     public List<UserResponseDTO> getAllPsychologists() {
         return userRepository.findByRole(Role.PSYCHOLOGIST)
                 .stream()
-                .map(UserMapper::toResponseDTO)
+                .map(this::mapUserToDTOWithReviewStats)
                 .collect(Collectors.toList());
     }
 
@@ -62,13 +65,13 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + id));
-        return UserMapper.toResponseDTO(user);
+        return mapUserToDTOWithReviewStats(user);
     }
 
     @Override
     public Optional<UserResponseDTO> getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .map(UserMapper::toResponseDTO);
+                .map(this::mapUserToDTOWithReviewStats);
     }
 
     @Override
@@ -117,7 +120,7 @@ public class UserServiceImpl implements UserService {
 
     public List<UserResponseDTO> getPsychologistsBySpecialty(String specialty) {
         return userRepository.findByRoleAndProfileSpecialtyContainingIgnoreCase(Role.PSYCHOLOGIST, specialty).stream()
-                .map(UserMapper::toResponseDTO)
+                .map(this::mapUserToDTOWithReviewStats)
                 .collect(Collectors.toList());
     }
 
@@ -141,7 +144,6 @@ public class UserServiceImpl implements UserService {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            // Parsear JSON
             ObjectMapper mapper = new ObjectMapper();
             JsonNode json = mapper.readTree(response.body());
 
@@ -179,5 +181,20 @@ public class UserServiceImpl implements UserService {
 
         UserMapper.updateUserFromDTO(user, dto);
         userRepository.save(user);
+    }
+
+    private UserResponseDTO mapUserToDTOWithReviewStats(User user) {
+        UserResponseDTO dto = UserMapper.toResponseDTO(user);
+
+        if (user.getRole() == Role.PSYCHOLOGIST) {
+            List<Review> reviews = reviewRepository.findByPsychologist_Id(user.getId());
+            int total = reviews.size();
+            double average = total == 0 ? 0 : reviews.stream().mapToInt(Review::getRating).average().orElse(0);
+
+            dto.setAverageRating(average);
+            dto.setTotalReviews(total);
+        }
+
+        return dto;
     }
 }

@@ -224,8 +224,20 @@ public class AppointmentServiceImpl implements AppointmentService {
     public void acceptAppointment(Long appointmentId) {
         Appointment ap = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada: " + appointmentId));
+
         ap.setStatus(AppointmentStatus.CONFIRMADA);
         appointmentRepo.save(ap);
+
+        User psychologist = ap.getPsychologist();
+        User patient = ap.getPatient();
+
+        // Añade si aún no está asignado
+        if (!psychologist.getPatients().contains(patient)) {
+            psychologist.getPatients().add(patient);
+            patient.getPsychologists().add(psychologist);
+            userRepo.save(psychologist);
+            userRepo.save(patient);
+        }
     }
 
     @Override

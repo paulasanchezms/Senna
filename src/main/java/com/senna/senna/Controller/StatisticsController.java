@@ -1,3 +1,4 @@
+
 package com.senna.senna.Controller;
 
 import com.senna.senna.DTO.StatisticsResponseDTO;
@@ -17,42 +18,38 @@ public class StatisticsController {
         this.statisticsService = statisticsService;
     }
 
-    /**
-     * /api/statistics/weekly?year=2025&week=18
-     * si no mandas year+week devuelve la semana actual
-     */
     @GetMapping("/weekly")
     public ResponseEntity<StatisticsResponseDTO> getWeeklyStatistics(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(value = "year", required = false) Integer year,
-            @RequestParam(value = "week", required = false) Integer week
+            @RequestParam(value = "week", required = false) Integer week,
+            @RequestParam(value = "patientId", required = false) Long patientId
     ) {
         String email = userDetails.getUsername();
         StatisticsResponseDTO stats;
+
         if (year != null && week != null) {
-            stats = statisticsService.getWeeklyStatistics(email, year, week);
+            stats = statisticsService.getWeeklyStatistics(email, year, week, patientId);
         } else {
-            stats = statisticsService.getWeeklyStatistics(email);
+            stats = statisticsService.getWeeklyStatistics(email, patientId);
         }
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * /api/statistics/monthly?year=2025&month=5
-     * si no mandas year+month devuelve el mes actual
-     */
     @GetMapping("/monthly")
     public ResponseEntity<StatisticsResponseDTO> getMonthlyStatistics(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(value = "year", required = false) Integer year,
-            @RequestParam(value = "month", required = false) Integer month
+            @RequestParam(value = "month", required = false) Integer month,
+            @RequestParam(value = "patientId", required = false) Long patientId
     ) {
         String email = userDetails.getUsername();
         StatisticsResponseDTO stats;
+
         if (year != null && month != null) {
-            stats = statisticsService.getMonthlyStatistics(email, year, month);
+            stats = statisticsService.getMonthlyStatistics(email, year, month, patientId);
         } else {
-            stats = statisticsService.getMonthlyStatistics(email);
+            stats = statisticsService.getMonthlyStatistics(email, patientId);
         }
         return ResponseEntity.ok(stats);
     }

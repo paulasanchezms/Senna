@@ -10,4 +10,6 @@ public class UpdatePsychologistProfileDTO {
     private BigDecimal consultationPrice;
     private String specialty;
     private String location;
+    private String document;
+    private String description;
 }

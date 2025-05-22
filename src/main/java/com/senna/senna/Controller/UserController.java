@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -97,5 +99,20 @@ public class UserController {
         return userServiceImpl.getUserByEmail(userDetails.getUsername())
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/upload-image")
+    public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile image) {
+        String imageUrl = userServiceImpl.uploadImageToImgBB(image);
+        return ResponseEntity.ok().body(Map.of("url", imageUrl));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<Void> updateCurrentUser(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,
+            @RequestBody UpdateUserDTO dto
+    ) {
+        userServiceImpl.updateUserByEmail(userDetails.getUsername(), dto);
+        return ResponseEntity.ok().build();
     }
 }

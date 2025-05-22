@@ -37,6 +37,9 @@ public class PsychologistProfile {
     @Column(length = 255)
     private String document;
 
+    @Column
+    private String description;
+
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkingHour> workingHours;
 }

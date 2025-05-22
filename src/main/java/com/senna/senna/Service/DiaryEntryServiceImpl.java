@@ -85,8 +85,8 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         }
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
-        if (!psychologist.getPatients().contains(patient)) {
-            throw new IllegalArgumentException("El paciente no está asignado al psicólogo");
+       if (!psychologist.getPatients().contains(patient)) {
+           throw new IllegalArgumentException("El paciente no está asignado al psicólogo");
         }
         return diaryEntryRepository.findByUser(patient);
     }

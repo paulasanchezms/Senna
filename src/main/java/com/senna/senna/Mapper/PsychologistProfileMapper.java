@@ -47,6 +47,8 @@ public class PsychologistProfileMapper {
         dto.setConsultationPrice(profile.getConsultationPrice());
         dto.setSpecialty(profile.getSpecialty());
         dto.setLocation(profile.getLocation());
+        dto.setDescription(profile.getDescription());
+        dto.setDocument(profile.getDocument());
 
         List<WorkingHourDTO> hoursDto = profile.getWorkingHours().stream()
                 .map(wh -> {
@@ -75,6 +77,12 @@ public class PsychologistProfileMapper {
         }
         if (dto.getLocation() != null) {
             profile.setLocation(dto.getLocation());
+        }
+        if (dto.getDocument() != null) {
+            profile.setDocument(dto.getDocument());
+        }
+        if (dto.getDescription() != null) {
+            profile.setDescription(dto.getDescription());
         }
     }
 }

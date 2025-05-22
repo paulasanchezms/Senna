@@ -34,14 +34,23 @@ public class StatisticsServiceImpl implements StatisticsService {
         WeekFields wf = WeekFields.ISO;
         int currentWeek = today.get(wf.weekOfYear());
         int currentYear = today.getYear();
-        return getWeeklyStatistics(userEmail, currentYear, currentWeek);
+        return getWeeklyStatistics(userEmail, currentYear, currentWeek, null);
     }
 
-
+    @Override
     @Transactional(readOnly = true)
-    public StatisticsResponseDTO getWeeklyStatistics(String userEmail, int year, int weekOfYear) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
+    public StatisticsResponseDTO getWeeklyStatistics(String userEmail, Long patientId) {
+        LocalDate today = LocalDate.now();
+        WeekFields wf = WeekFields.ISO;
+        int currentWeek = today.get(wf.weekOfYear());
+        int currentYear = today.getYear();
+        return getWeeklyStatistics(userEmail, currentYear, currentWeek, patientId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StatisticsResponseDTO getWeeklyStatistics(String userEmail, int year, int weekOfYear, Long patientId) {
+        User user = resolveUserContext(userEmail, patientId);
 
         WeekFields wf = WeekFields.ISO;
         LocalDate monday = LocalDate.of(year, 1, 4)
@@ -49,8 +58,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                 .with(wf.dayOfWeek(), DayOfWeek.MONDAY.getValue());
         LocalDate sunday = monday.plusDays(6);
 
-        List<DiaryEntry> entries = diaryEntryRepository
-                .findByUserAndDateBetween(user, monday, sunday);
+        List<DiaryEntry> entries = diaryEntryRepository.findByUserAndDateBetween(user, monday, sunday);
 
         return calculateStatistics(entries, true, monday, sunday);
     }
@@ -59,28 +67,46 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getMonthlyStatistics(String userEmail) {
         LocalDate today = LocalDate.now();
-        return getMonthlyStatistics(userEmail, today.getYear(), today.getMonthValue());
+        return getMonthlyStatistics(userEmail, today.getYear(), today.getMonthValue(), null);
     }
 
-
+    @Override
     @Transactional(readOnly = true)
-    public StatisticsResponseDTO getMonthlyStatistics(String userEmail, int year, int month) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
+    public StatisticsResponseDTO getMonthlyStatistics(String userEmail, Long patientId) {
+        LocalDate today = LocalDate.now();
+        return getMonthlyStatistics(userEmail, today.getYear(), today.getMonthValue(), patientId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StatisticsResponseDTO getMonthlyStatistics(String userEmail, int year, int month, Long patientId) {
+        User user = resolveUserContext(userEmail, patientId);
 
         YearMonth ym = YearMonth.of(year, month);
         LocalDate startOfMonth = ym.atDay(1);
         LocalDate endOfMonth   = ym.atEndOfMonth();
 
-        List<DiaryEntry> entries = diaryEntryRepository
-                .findByUserAndDateBetween(user, startOfMonth, endOfMonth);
+        List<DiaryEntry> entries = diaryEntryRepository.findByUserAndDateBetween(user, startOfMonth, endOfMonth);
 
         return calculateStatistics(entries, false, startOfMonth, endOfMonth);
     }
 
-    /**
-     * Lógica común de cálculo de estadísticas.
-     */
+    private User resolveUserContext(String psychologistEmail, Long patientId) {
+        if (patientId != null) {
+            validatePsychologistAccess(psychologistEmail, patientId);
+            return userRepository.findById(patientId)
+                    .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+        } else {
+            return userRepository.findByEmail(psychologistEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + psychologistEmail));
+        }
+    }
+
+    private void validatePsychologistAccess(String psychologistEmail, Long patientId) {
+        // Aquí puedes validar que el psicólogo tenga permiso para ver los datos de ese paciente si lo necesitas
+        // De momento se asume que sí si llega hasta aquí
+    }
+
     private StatisticsResponseDTO calculateStatistics(
             List<DiaryEntry> entries,
             boolean isWeekly,

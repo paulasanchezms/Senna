@@ -3,15 +3,10 @@ package com.senna.senna.Service;
 import com.senna.senna.DTO.AppointmentResponseDTO;
 import com.senna.senna.DTO.CreateAppointmentDTO;
 import com.senna.senna.DTO.UserResponseDTO;
-import com.senna.senna.Entity.Appointment;
-import com.senna.senna.Entity.AppointmentStatus;
-import com.senna.senna.Entity.PsychologistProfile;
-import com.senna.senna.Entity.User;
+import com.senna.senna.Entity.*;
 import com.senna.senna.Mapper.AppointmentMapper;
 import com.senna.senna.Mapper.UserMapper;
-import com.senna.senna.Repository.AppointmentRepository;
-import com.senna.senna.Repository.PsychologistProfileRepository;
-import com.senna.senna.Repository.UserRepository;
+import com.senna.senna.Repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +27,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepo;
     private final PsychologistProfileRepository profileRepo;
     private final UserRepository userRepo;
+    private final WorkingHourCustomRepository customHourRepo;
 
     @Override
     @Transactional
@@ -50,7 +46,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                 patient,
                 dto.getDateTime(),
                 List.of(AppointmentStatus.PENDIENTE, AppointmentStatus.CONFIRMADA)
-        );       if (exists) {
+        );
+        if (exists) {
             throw new IllegalStateException("Ya existe una cita para esa fecha y hora.");
         }
 
@@ -84,47 +81,28 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Duración de consulta inválida: " + duration);
         }
 
-        int dow = date.getDayOfWeek().getValue() % 7;
+        int dow = (date.getDayOfWeek().getValue() + 6) % 7;
+        List<WorkingHour> hoursForDay = getEffectiveWorkingHours(profile, date, dow);
 
-        return profile.getWorkingHours().stream()
-                .filter(wh -> wh.getDayOfWeek() == dow)
-                .flatMap(wh -> {
-                    if (wh.getStartTime().isAfter(wh.getEndTime()) || wh.getStartTime().equals(wh.getEndTime())) {
-                        System.out.println("Horario inválido: " + wh);
-                        return Stream.empty();
-                    }
-
-                    LocalTime slot = wh.getStartTime();
-                    LocalTime limit = wh.getEndTime().minusMinutes(duration);
-                    List<String> slots = new ArrayList<>();
-
-                    while (!slot.isAfter(limit)) {
-                        if (!booked.contains(slot)) {
-                            slots.add(slot.toString());
-                        }
-                        slot = slot.plusMinutes(duration);
-                    }
-                    return slots.stream();
-                })
-                .sorted()
-                .collect(Collectors.toList());
+        return calculateSlots(hoursForDay, booked, duration);
     }
+
+
 
     @Transactional(readOnly = true)
     public Map<LocalDate, List<String>> getAvailableTimesForWeek(Long psychologistId, LocalDate startDate, LocalDate endDate) {
         User psychologist = userRepo.findById(psychologistId)
                 .orElseThrow(() -> new EntityNotFoundException("Psicólogo no encontrado: " + psychologistId));
+
         PsychologistProfile profile = profileRepo.findByUserIdWithWorkingHours(psychologist.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado para userId: " + psychologistId));
 
-        // Citas solo con estado PENDIENTE o CONFIRMADA
         List<Appointment> appointments = appointmentRepo.findByPsychologistAndDateTimeBetween(
                         psychologist, startDate.atStartOfDay(), endDate.atTime(23, 59))
                 .stream()
                 .filter(ap -> ap.getStatus() == AppointmentStatus.PENDIENTE || ap.getStatus() == AppointmentStatus.CONFIRMADA)
                 .collect(Collectors.toList());
 
-        // Agrupar las horas reservadas por día
         Map<LocalDate, List<LocalTime>> bookedByDay = appointments.stream()
                 .collect(Collectors.groupingBy(
                         ap -> ap.getDateTime().toLocalDate(),
@@ -139,44 +117,54 @@ public class AppointmentServiceImpl implements AppointmentService {
         Map<LocalDate, List<String>> available = new HashMap<>();
 
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            final LocalDate currentDate = date;
-            int dow = currentDate.getDayOfWeek().getValue() % 7;
-
-            List<String> slots = profile.getWorkingHours().stream()
-                    .filter(wh -> wh.getDayOfWeek() == dow)
-                    .flatMap(wh -> {
-                        if (wh.getStartTime().isAfter(wh.getEndTime()) || wh.getStartTime().equals(wh.getEndTime())) {
-                            System.out.println("Horario inválido en fecha " + currentDate + ": " + wh);
-                            return Stream.empty();
-                        }
-
-                        LocalTime slot = wh.getStartTime();
-                        LocalTime limit = wh.getEndTime().minusMinutes(duration);
-                        List<String> daySlots = new ArrayList<>();
-
-                        while (!slot.isAfter(limit)) {
-                            final LocalTime currentSlot = slot;
-                            boolean isBooked = bookedByDay.getOrDefault(currentDate, Collections.emptyList())
-                                    .stream()
-                                    .anyMatch(t -> t.truncatedTo(ChronoUnit.MINUTES).equals(currentSlot));
-
-                            if (!isBooked) {
-                                daySlots.add(slot.toString());
-                            }
-
-                            slot = slot.plusMinutes(duration);
-                        }
-
-                        return daySlots.stream();
-                    })
-                    .sorted()
-                    .collect(Collectors.toList());
-
-            available.put(currentDate, slots);
+            int dow = (date.getDayOfWeek().getValue() + 6) % 7;            List<LocalTime> booked = bookedByDay.getOrDefault(date, Collections.emptyList());
+            List<WorkingHour> hoursForDay = getEffectiveWorkingHours(profile, date, dow);
+            List<String> slots = calculateSlots(hoursForDay, booked, duration);
+            available.put(date, slots);
         }
 
         return available;
     }
+
+    private List<WorkingHour> getEffectiveWorkingHours(PsychologistProfile profile, LocalDate date, int dow) {
+        List<WorkingHourCustom> customHours = customHourRepo.findByProfileAndDate(profile, date);
+        if (!customHours.isEmpty()) {
+            return customHours.stream()
+                    .map(c -> WorkingHour.builder()
+                            .profile(profile)
+                            .dayOfWeek(dow)
+                            .startTime(c.getStartTime())
+                            .endTime(c.getEndTime())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+        return profile.getWorkingHours().stream()
+                .filter(wh -> wh.getDayOfWeek() == dow)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> calculateSlots(List<WorkingHour> hours, List<LocalTime> booked, int duration) {
+        List<String> slots = new ArrayList<>();
+
+        for (WorkingHour wh : hours) {
+            LocalTime start = wh.getStartTime();
+            LocalTime end = wh.getEndTime().minusMinutes(duration);
+
+            for (LocalTime time = start; !time.isAfter(end); time = time.plusMinutes(duration)) {
+                final LocalTime currentTime = time;
+                boolean isBooked = booked.stream()
+                        .anyMatch(b -> b.truncatedTo(ChronoUnit.MINUTES).equals(currentTime));
+
+                if (!isBooked) {
+                    slots.add(time.toString());
+                }
+            }
+        }
+
+        Collections.sort(slots);
+        return slots;
+    }
+
     @Override
     @Transactional
     public AppointmentResponseDTO updateAppointment(Long appointmentId, CreateAppointmentDTO dto) {
@@ -236,8 +224,20 @@ public class AppointmentServiceImpl implements AppointmentService {
     public void acceptAppointment(Long appointmentId) {
         Appointment ap = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada: " + appointmentId));
+
         ap.setStatus(AppointmentStatus.CONFIRMADA);
         appointmentRepo.save(ap);
+
+        User psychologist = ap.getPsychologist();
+        User patient = ap.getPatient();
+
+        // Añade si aún no está asignado
+        if (!psychologist.getPatients().contains(patient)) {
+            psychologist.getPatients().add(patient);
+            patient.getPsychologists().add(psychologist);
+            userRepo.save(psychologist);
+            userRepo.save(patient);
+        }
     }
 
     @Override

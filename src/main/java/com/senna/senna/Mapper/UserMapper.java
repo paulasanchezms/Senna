@@ -1,6 +1,7 @@
 package com.senna.senna.Mapper;
 
 import com.senna.senna.DTO.CreateUserDTO;
+import com.senna.senna.DTO.PsychologistProfileDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
 import com.senna.senna.Entity.User;
@@ -26,6 +27,19 @@ public class UserMapper {
         dto.setLast_name(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
+        dto.setPhone(user.getPhone());
+        dto.setPhotoUrl(user.getPhotoUrl());
+
+        if (user.getProfile() != null) {
+            PsychologistProfileDTO profileDTO = new PsychologistProfileDTO();
+            profileDTO.setConsultationDuration(user.getProfile().getConsultationDuration());
+            profileDTO.setConsultationPrice(user.getProfile().getConsultationPrice());
+            profileDTO.setSpecialty(user.getProfile().getSpecialty());
+            profileDTO.setLocation(user.getProfile().getLocation());
+            profileDTO.setDocument(user.getProfile().getDocument());
+            profileDTO.setDescription(user.getProfile().getDescription());
+            dto.setProfile(profileDTO);
+        }
         return dto;
     }
 
@@ -36,6 +50,12 @@ public class UserMapper {
         if (dto.getLast_name() != null) {
             // Nuevo setter camelCase
             user.setLastName(dto.getLast_name());
+        }
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+        if (dto.getPhotoUrl() != null) {
+            user.setPhotoUrl(dto.getPhotoUrl());
         }
     }
 }

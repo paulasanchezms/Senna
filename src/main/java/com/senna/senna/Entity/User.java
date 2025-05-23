@@ -75,4 +75,7 @@ public class User {
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> givenReviews;
+
+    @Column(name = "active")
+    private boolean active = true;
 }

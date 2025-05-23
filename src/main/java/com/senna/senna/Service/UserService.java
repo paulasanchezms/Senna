@@ -16,4 +16,9 @@ public interface UserService {
     UserResponseDTO updateUser(Long id, UpdateUserDTO dto);
     void deleteUser(Long id);
     boolean emailExists(String email);
+
+    List<UserResponseDTO> findPendingPsychologists();
+    void approvePsychologist(Long userId);
+    void rejectPsychologist(Long userId);
+    void banUser(Long userId);
 }

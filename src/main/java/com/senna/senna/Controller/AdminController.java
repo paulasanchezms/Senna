@@ -1,6 +1,7 @@
 package com.senna.senna.Controller;
 
 import com.senna.senna.DTO.UserResponseDTO;
+import com.senna.senna.Entity.Role;
 import com.senna.senna.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AdminController {
 
     private final UserService userService;
@@ -43,7 +44,7 @@ public class AdminController {
     @GetMapping("/users")
     public List<UserResponseDTO> getAllActiveUsers() {
         return userService.getAllUsers().stream()
-                .filter(UserResponseDTO::isActive)
+                .filter(user -> user.isActive() && user.getRole() != Role.ADMIN)
                 .toList();
     }
 }

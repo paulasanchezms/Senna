@@ -10,4 +10,15 @@ public class CreateUserDTO {
     private String email;
     private String password;
     private Role role;
+
+    // En CreateUserDTO.java
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

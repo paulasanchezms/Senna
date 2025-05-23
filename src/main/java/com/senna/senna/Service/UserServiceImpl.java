@@ -207,9 +207,14 @@ public class UserServiceImpl implements UserService {
     public void approvePsychologist(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
         if (user.getProfile() == null) throw new EntityNotFoundException("No tiene perfil profesional");
+
         user.getProfile().setStatus(ProfileStatus.APPROVED);
+        user.setActive(true);
+
         profileRepository.save(user.getProfile());
+        userRepository.save(user);
     }
 
     @Override

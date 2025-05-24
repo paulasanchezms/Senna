@@ -7,6 +7,7 @@ import com.senna.senna.Service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -113,6 +114,12 @@ public class UserController {
             @RequestBody UpdateUserDTO dto
     ) {
         userServiceImpl.updateUserByEmail(userDetails.getUsername(), dto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/accept-terms")
+    public ResponseEntity<Void> acceptTerms(@AuthenticationPrincipal UserDetails userDetails) {
+        userServiceImpl.acceptTerms(userDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 }

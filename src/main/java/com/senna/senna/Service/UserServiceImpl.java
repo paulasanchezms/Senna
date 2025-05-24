@@ -233,4 +233,11 @@ public class UserServiceImpl implements UserService {
         user.setActive(false);
         userRepository.save(user);
     }
+
+    public void acceptTerms(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + email));
+        user.setTermsAccepted(true);
+        userRepository.save(user);
+    }
 }

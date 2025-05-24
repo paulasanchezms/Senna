@@ -31,6 +31,7 @@ public class UserMapper {
         dto.setPhone(user.getPhone());
         dto.setPhotoUrl(user.getPhotoUrl());
         dto.setActive(user.isActive());
+        dto.setTermsAccepted(user.isTermsAccepted());
 
         if (user.getProfile() != null) {
             PsychologistProfileDTO profileDTO = new PsychologistProfileDTO();

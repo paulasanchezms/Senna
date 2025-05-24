@@ -11,8 +11,8 @@ public class CreateUserDTO {
     private String password;
     private Role role;
 
-    // En CreateUserDTO.java
     private boolean active;
+    private boolean termsAccepted; // Añadido
 
     public boolean isActive() {
         return active;
@@ -20,5 +20,13 @@ public class CreateUserDTO {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isTermsAccepted() {
+        return termsAccepted;
+    }
+
+    public void setTermsAccepted(boolean termsAccepted) {
+        this.termsAccepted = termsAccepted;
     }
 }

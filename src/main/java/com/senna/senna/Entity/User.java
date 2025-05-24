@@ -77,5 +77,9 @@ public class User {
     private List<Review> givenReviews;
 
     @Column(name = "active")
-    private boolean active = true;
+    private boolean active;
+
+    @Column(name = "terms_accepted")
+    private boolean termsAccepted;
 }
+

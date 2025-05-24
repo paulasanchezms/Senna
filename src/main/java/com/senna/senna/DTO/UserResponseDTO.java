@@ -27,4 +27,6 @@ public class UserResponseDTO {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    private boolean termsAccepted;
 }

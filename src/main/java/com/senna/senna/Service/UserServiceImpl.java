@@ -39,10 +39,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO createUser(CreateUserDTO dto) {
         User user = UserMapper.fromDTO(dto);
+
+        if (user.getRole() == Role.PATIENT) {
+            user.setActive(true);
+        }
+
         User saved = userRepository.save(user);
         return UserMapper.toResponseDTO(saved);
     }
-
     @Override
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll()

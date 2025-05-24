@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senna.senna.DTO.CreateUserDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
+import com.senna.senna.Entity.PsychologistProfile;
 import com.senna.senna.Entity.Review;
 import com.senna.senna.Entity.Role;
 import com.senna.senna.Entity.User;
+import com.senna.senna.Entity.ProfileStatus;
 import com.senna.senna.Mapper.UserMapper;
+import com.senna.senna.Repository.PsychologistProfileRepository;
 import com.senna.senna.Repository.ReviewRepository;
 import com.senna.senna.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,36 +19,34 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.io.*;
-import java.net.URI;
-import java.net.http.*;
-import java.nio.charset.StandardCharsets;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
+    private final PsychologistProfileRepository profileRepository;
 
     @Override
     public UserResponseDTO createUser(CreateUserDTO dto) {
         User user = UserMapper.fromDTO(dto);
+
+        if (user.getRole() == Role.PATIENT) {
+            user.setActive(true);
+        }
+
         User saved = userRepository.save(user);
         return UserMapper.toResponseDTO(saved);
     }
-
     @Override
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll()
@@ -196,5 +197,51 @@ public class UserServiceImpl implements UserService {
         }
 
         return dto;
+    }
+
+    @Override
+    public List<UserResponseDTO> findPendingPsychologists() {
+        return userRepository.findByRoleAndProfile_Status(Role.PSYCHOLOGIST, ProfileStatus.PENDING)
+                .stream()
+                .map(UserMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void approvePsychologist(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+        if (user.getProfile() == null) throw new EntityNotFoundException("No tiene perfil profesional");
+
+        user.getProfile().setStatus(ProfileStatus.APPROVED);
+        user.setActive(true);
+
+        profileRepository.save(user.getProfile());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void rejectPsychologist(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        if (user.getProfile() == null) throw new EntityNotFoundException("No tiene perfil profesional");
+        user.getProfile().setStatus(ProfileStatus.REJECTED);
+        profileRepository.save(user.getProfile());
+    }
+
+    @Override
+    public void banUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+        user.setActive(false);
+        userRepository.save(user);
+    }
+
+    public void acceptTerms(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + email));
+        user.setTermsAccepted(true);
+        userRepository.save(user);
     }
 }

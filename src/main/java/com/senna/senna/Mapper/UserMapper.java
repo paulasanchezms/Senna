@@ -16,6 +16,7 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
         user.setRole(dto.getRole());
+        user.setActive(dto.isActive());
         return user;
     }
 
@@ -29,6 +30,8 @@ public class UserMapper {
         dto.setRole(user.getRole());
         dto.setPhone(user.getPhone());
         dto.setPhotoUrl(user.getPhotoUrl());
+        dto.setActive(user.isActive());
+        dto.setTermsAccepted(user.isTermsAccepted());
 
         if (user.getProfile() != null) {
             PsychologistProfileDTO profileDTO = new PsychologistProfileDTO();

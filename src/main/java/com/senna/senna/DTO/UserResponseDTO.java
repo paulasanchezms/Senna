@@ -18,4 +18,15 @@ public class UserResponseDTO {
     private PsychologistProfileDTO profile;
     private Double averageRating;
     private Integer totalReviews;
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    private boolean termsAccepted;
 }

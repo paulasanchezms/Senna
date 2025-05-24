@@ -1,5 +1,6 @@
 package com.senna.senna.Repository;
 
+import com.senna.senna.Entity.ProfileStatus;
 import com.senna.senna.Entity.User;
 import com.senna.senna.Entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,10 +13,10 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
-
-    // Buscar todos los usuarios por rol
     List<User> findByRole(Role role);
-
     List<User> findByRoleAndProfileSpecialtyContainingIgnoreCase(Role role, String specialty);
+    List<User> findByRoleAndProfile_Status(Role role, ProfileStatus status);
+    List<User> findByRoleAndActiveFalse(Role role);
+
 
 }

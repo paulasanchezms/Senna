@@ -42,5 +42,9 @@ public class PsychologistProfile {
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkingHour> workingHours;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ProfileStatus status = ProfileStatus.PENDING;
 }
 

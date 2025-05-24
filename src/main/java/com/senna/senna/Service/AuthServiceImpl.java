@@ -62,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
         // 2) codificar contraseña y asignar rol
         dto.setPassword(passwordEncoder.encode(dto.getPassword()));
         dto.setRole(Role.PSYCHOLOGIST);
+        dto.setActive(false);
         // 3) crear usuario
         UserResponseDTO user = userServiceImpl.createUser(dto);
         // 4) crear perfil ligado al usuario recién creado

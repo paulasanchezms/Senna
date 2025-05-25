@@ -22,6 +22,7 @@ public class AppointmentMapper {
         dto.setPatient(UserMapper.toResponseDTO(appointment.getPatient()));
         dto.setPatientId(appointment.getPatient().getId());
         dto.setPsychologistId(appointment.getPsychologist().getId());
+        dto.setPsychologist(UserMapper.toResponseDTO(appointment.getPsychologist()));
         dto.setDateTime(appointment.getDateTime());
         dto.setDuration(appointment.getDuration());
         dto.setStatus(appointment.getStatus().name());

@@ -11,12 +11,12 @@ public class UserMapper {
     public static User fromDTO(CreateUserDTO dto) {
         User user = new User();
         user.setName(dto.getName());
-        // Ahora coincide con el setter setLastName de la entidad
         user.setLastName(dto.getLast_name());
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
         user.setRole(dto.getRole());
         user.setActive(dto.isActive());
+        user.setTermsAccepted(dto.isTermsAccepted());
         return user;
     }
 

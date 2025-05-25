@@ -55,24 +55,45 @@ public class AuthServiceImpl implements AuthService {
             CreateUserDTO dto,
             CreatePsychologistProfileDTO profileDto
     ) throws Exception {
-        // 1) comprobación de email
+        // 1) comprobación de email duplicado
         if (userServiceImpl.emailExists(dto.getEmail())) {
-            throw new Exception("El email ya está en uso");
+            throw new IllegalArgumentException("El email ya está en uso");
         }
-        // 2) codificar contraseña y asignar rol
+
+        // 2) validación mínima de datos del perfil
+        if (profileDto.getConsultationDuration() == null) {
+            throw new IllegalArgumentException("La duración de la consulta es obligatoria.");
+        }
+        if (profileDto.getConsultationPrice() == null) {
+            throw new IllegalArgumentException("El precio de la consulta es obligatorio.");
+        }
+        if (isNullOrBlank(profileDto.getLocation())) {
+            throw new IllegalArgumentException("La ubicación es obligatoria.");
+        }
+        if (isNullOrBlank(profileDto.getSpecialty())) {
+            throw new IllegalArgumentException("La especialidad es obligatoria.");
+        }
+
+        // 3) codificar contraseña y preparar usuario
         dto.setPassword(passwordEncoder.encode(dto.getPassword()));
         dto.setRole(Role.PSYCHOLOGIST);
         dto.setActive(false);
-        // 3) crear usuario
+
+        // 4) crear usuario solo si todo lo anterior está correcto
         UserResponseDTO user = userServiceImpl.createUser(dto);
-        // 4) crear perfil ligado al usuario recién creado
+
+        // 5) crear perfil ligado al usuario recién creado
         psychologistProfileServiceImpl.createProfile(user.getId_user(), profileDto);
-        // 5) generar JWT
+
+        // 6) generar JWT
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtUtil.generateToken(userDetails);
         return new AuthResponse(token);
     }
 
+    private boolean isNullOrBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
     /**
      * Autentica al usuario y genera un JWT.
      */

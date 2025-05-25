@@ -107,7 +107,6 @@ public class AppointmentController {
         return ResponseEntity.ok(slots);
     }
 
-    // ✅ Este es el único método para citas pendientes (autenticado, sin path variable)
     @GetMapping("/psychologist/pending")
     public List<AppointmentResponseDTO> getPendingAppointmentsForAuthenticatedPsychologist(@AuthenticationPrincipal UserDetails userDetails) {
         User psychologist = userRepository.findByEmail(userDetails.getUsername())
@@ -158,5 +157,16 @@ public class AppointmentController {
 
         Map<LocalDate, List<String>> slots = appointmentService.getAvailableTimesForWeek(id, startDate, endDate);
         return ResponseEntity.ok(slots);
+    }
+
+    @DeleteMapping("/cancel-by-psychologist/{psychologistId}")
+    public ResponseEntity<Void> cancelAllWithPsychologist(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long psychologistId) {
+        User patient = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+
+        appointmentService.cancelAllAppointmentsWithPsychologist(patient.getId(), psychologistId);
+        return ResponseEntity.noContent().build();
     }
 }

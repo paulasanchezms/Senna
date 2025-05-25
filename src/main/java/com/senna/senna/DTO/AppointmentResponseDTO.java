@@ -1,4 +1,3 @@
-// AppointmentResponseDTO.java
 package com.senna.senna.DTO;
 
 import lombok.Data;
@@ -8,6 +7,7 @@ import java.time.LocalDateTime;
 public class AppointmentResponseDTO {
     private Long id;
     private UserResponseDTO patient;
+    private UserResponseDTO psychologist;
     private Long patientId;
     private Long psychologistId;
     private LocalDateTime dateTime;

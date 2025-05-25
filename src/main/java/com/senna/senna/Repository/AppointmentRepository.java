@@ -44,4 +44,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             LocalDateTime dateTime,
             List<AppointmentStatus> statuses
     );
+
+    List<Appointment> findByPatient_IdAndPsychologist_IdAndStatusIn(
+            Long patientId,
+            Long psychologistId,
+            List<AppointmentStatus> statuses
+    );
 }

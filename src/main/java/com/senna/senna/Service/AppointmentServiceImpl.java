@@ -260,5 +260,18 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .toList();
     }
 
+    @Transactional
+    public void cancelAllAppointmentsWithPsychologist(Long patientId, Long psychologistId) {
+        List<Appointment> appointments = appointmentRepo.findByPatient_IdAndPsychologist_IdAndStatusIn(
+                patientId, psychologistId, List.of(AppointmentStatus.CONFIRMADA, AppointmentStatus.PENDIENTE)
+        );
+
+        for (Appointment appt : appointments) {
+            appt.setStatus(AppointmentStatus.CANCELADA);
+        }
+
+        appointmentRepo.saveAll(appointments);
+    }
+
 
 }

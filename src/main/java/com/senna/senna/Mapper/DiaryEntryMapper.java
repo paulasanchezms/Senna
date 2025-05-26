@@ -18,6 +18,7 @@ public class DiaryEntryMapper {
         dto.setId(entry.getId());
         dto.setDate(entry.getDate());
         dto.setNotes(entry.getNotes());
+        dto.setMoodLevel(entry.getMoodLevel());
 
         // Map user
         UserResponseDTO userDTO = UserMapper.toResponseDTO(entry.getUser());
@@ -28,7 +29,7 @@ public class DiaryEntryMapper {
                 .stream()
                 .map(DiaryEntryMapper::toMoodDTO)
                 .collect(Collectors.toList());
-        dto.setMood(moodDTOs);
+        dto.setMoods(moodDTOs);
 
         // Map symptoms
         List<SymptomDTO> symptomDTOs = entry.getSymptoms()

@@ -11,10 +11,22 @@ public class CreateUserDTO {
     private String password;
     private Role role;
 
-    // Solo si es PSYCHOLOGIST
-    private String dni;
-    private String qualification;
-    private String specialty;
-    private String location;
-    private String document;
+    private boolean active;
+    private boolean termsAccepted; // Añadido
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public boolean isTermsAccepted() {
+        return termsAccepted;
+    }
+
+    public void setTermsAccepted(boolean termsAccepted) {
+        this.termsAccepted = termsAccepted;
+    }
 }

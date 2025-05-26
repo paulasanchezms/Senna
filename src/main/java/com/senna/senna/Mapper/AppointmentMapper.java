@@ -1,19 +1,47 @@
 package com.senna.senna.Mapper;
 
 import com.senna.senna.DTO.AppointmentResponseDTO;
+import com.senna.senna.DTO.CreateAppointmentDTO;
 import com.senna.senna.Entity.Appointment;
+import com.senna.senna.Entity.User;
+import com.senna.senna.DTO.UserResponseDTO;
+import com.senna.senna.Mapper.UserMapper;
 
+
+/**
+ * Mapper para convertir entre la entidad Appointment y sus DTOs.
+ */
 public class AppointmentMapper {
-    public static AppointmentResponseDTO toResponseDTO(Appointment appointment) {
+
+    /**
+     * Mapea una entidad Appointment a un DTO de respuesta.
+     */
+    public static AppointmentResponseDTO toDTO(Appointment appointment) {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
         dto.setId(appointment.getId());
+        dto.setPatient(UserMapper.toResponseDTO(appointment.getPatient()));
+        dto.setPatientId(appointment.getPatient().getId());
+        dto.setPsychologistId(appointment.getPsychologist().getId());
+        dto.setPsychologist(UserMapper.toResponseDTO(appointment.getPsychologist()));
         dto.setDateTime(appointment.getDateTime());
         dto.setDuration(appointment.getDuration());
-        dto.setStatus(appointment.getStatus());
+        dto.setStatus(appointment.getStatus().name());
         dto.setDescription(appointment.getDescription());
-        // Convertir la entidad usuario a un DTO sin campos sensibles
-        dto.setPatient(UserMapper.toResponseDTO(appointment.getPatient()));
-        dto.setPsychologist(UserMapper.toResponseDTO(appointment.getPsychologist()));
         return dto;
+    }
+
+    /**
+     * Mapea un DTO de creación a la entidad Appointment.
+     */
+    public static Appointment toEntity(CreateAppointmentDTO dto, User patient, User psychologist) {
+        Appointment entity = new Appointment();
+        entity.setPatient(patient);
+        entity.setPsychologist(psychologist);
+        entity.setDateTime(dto.getDateTime());
+        entity.setDuration(dto.getDuration());
+        entity.setDescription(dto.getDescription());
+        // El servicio debe asignar el status PENDIENTE antes de guardar:
+        // entity.setStatus(AppointmentStatus.PENDIENTE);
+        return entity;
     }
 }

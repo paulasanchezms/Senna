@@ -26,8 +26,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        // Elimina el contexto (contextPath) de la URI, en caso de que exista,
-        // para comparar correctamente con la ruta "/api/auth/"
         String path = request.getRequestURI().substring(request.getContextPath().length());
         return path.startsWith("/api/auth/");
     }

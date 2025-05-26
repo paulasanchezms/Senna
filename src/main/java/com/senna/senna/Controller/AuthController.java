@@ -2,13 +2,14 @@ package com.senna.senna.Controller;
 
 import com.senna.senna.DTO.AuthResponse;
 import com.senna.senna.DTO.AuthRequest;
+import com.senna.senna.DTO.CreatePsychologistProfileDTO;
 import com.senna.senna.DTO.CreateUserDTO;
+import com.senna.senna.Entity.Role;
 import com.senna.senna.Service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,44 +21,39 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * Registra un nuevo usuario (paciente o psicólogo) y devuelve un JWT.
+     * El CreateUserDTO debe incluir todos los campos necesarios.
+     */
+    @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
-
-
-            @RequestPart("name") String name,
-            @RequestPart("last_name") String lastName,
-            @RequestPart("email") String email,
-            @RequestPart("password") String password,
-            @RequestPart("role") String role,
-            @RequestPart(value = "dni", required = false) String dni,
-            @RequestPart(value = "qualification", required = false) String qualification,
-            @RequestPart(value = "specialty", required = false) String specialty,
-            @RequestPart(value = "location", required = false) String location,
-            @RequestPart(value = "document", required = false) MultipartFile document
-
+            @Valid @RequestBody CreateUserDTO dto
     ) throws Exception {
-
-        CreateUserDTO dto = new CreateUserDTO();
-        dto.setName(name);
-        dto.setLast_name(lastName);
-        dto.setEmail(email);
-        dto.setPassword(password);
-        dto.setRole(com.senna.senna.Entity.Role.valueOf(role));
-
-        if (dto.getRole() == com.senna.senna.Entity.Role.PSYCHOLOGIST) {
-            dto.setDni(dni);
-            dto.setQualification(qualification);
-            dto.setSpecialty(specialty);
-            dto.setLocation(location);
-            // El documento se asignará dentro del servicio si es válido
-        }
-
-        AuthResponse response = authService.register(dto, document);
+        AuthResponse response = authService.register(dto);
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping(
+            value = "/register/psychologist",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<AuthResponse> registerPsychologist(
+            @Valid @RequestPart("user") CreateUserDTO userDto,
+            @Valid @RequestPart("profile") CreatePsychologistProfileDTO profileDto
+    ) throws Exception {
+        // Forzamos el rol aquí en el controlador
+        userDto.setRole(Role.PSYCHOLOGIST);
+        AuthResponse response = authService.registerPsychologist(userDto, profileDto);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Autentica a un usuario existente y devuelve un JWT.
+     */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) throws Exception {
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody AuthRequest authRequest
+    ) throws Exception {
         AuthResponse response = authService.login(authRequest);
         return ResponseEntity.ok(response);
     }

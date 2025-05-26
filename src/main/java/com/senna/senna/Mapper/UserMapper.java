@@ -1,9 +1,9 @@
 package com.senna.senna.Mapper;
 
 import com.senna.senna.DTO.CreateUserDTO;
+import com.senna.senna.DTO.PsychologistProfileDTO;
 import com.senna.senna.DTO.UpdateUserDTO;
 import com.senna.senna.DTO.UserResponseDTO;
-import com.senna.senna.Entity.Role;
 import com.senna.senna.Entity.User;
 
 public class UserMapper {
@@ -11,49 +11,54 @@ public class UserMapper {
     public static User fromDTO(CreateUserDTO dto) {
         User user = new User();
         user.setName(dto.getName());
-        user.setLast_name(dto.getLast_name());
+        user.setLastName(dto.getLast_name());
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
         user.setRole(dto.getRole());
-        user.setDni(dto.getDni());
-        user.setQualification(dto.getQualification());
-        user.setSpecialty(dto.getSpecialty());
-        user.setLocation(dto.getLocation());
-        user.setDocument(dto.getDocument());
+        user.setActive(dto.isActive());
+        user.setTermsAccepted(dto.isTermsAccepted());
         return user;
     }
 
     public static UserResponseDTO toResponseDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
-        dto.setId_user(user.getId_user());
+        dto.setId_user(user.getId());
         dto.setName(user.getName());
-        dto.setLast_name(user.getLast_name());
+        // Usamos getLastName() de la entidad
+        dto.setLast_name(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
+        dto.setPhone(user.getPhone());
+        dto.setPhotoUrl(user.getPhotoUrl());
+        dto.setActive(user.isActive());
+        dto.setTermsAccepted(user.isTermsAccepted());
 
-        if (user.getRole() == Role.PSYCHOLOGIST) {
-            dto.setDni(user.getDni());
-            dto.setQualification(user.getQualification());
-            dto.setSpecialty(user.getSpecialty());
-            dto.setLocation(user.getLocation());
-            dto.setDocument(user.getDocument());
-        } else {
-            // Campos que no aplican los dejamos como null explícitamente (opcional)
-            dto.setDni(null);
-            dto.setQualification(null);
-            dto.setSpecialty(null);
-            dto.setLocation(null);
-            dto.setDocument(null);
+        if (user.getProfile() != null) {
+            PsychologistProfileDTO profileDTO = new PsychologistProfileDTO();
+            profileDTO.setConsultationDuration(user.getProfile().getConsultationDuration());
+            profileDTO.setConsultationPrice(user.getProfile().getConsultationPrice());
+            profileDTO.setSpecialty(user.getProfile().getSpecialty());
+            profileDTO.setLocation(user.getProfile().getLocation());
+            profileDTO.setDocument(user.getProfile().getDocument());
+            profileDTO.setDescription(user.getProfile().getDescription());
+            dto.setProfile(profileDTO);
         }
-
         return dto;
     }
+
     public static void updateUserFromDTO(User user, UpdateUserDTO dto) {
-        if (dto.getName() != null) user.setName(dto.getName());
-        if (dto.getLast_name() != null) user.setLast_name(dto.getLast_name());
-        if (dto.getQualification() != null) user.setQualification(dto.getQualification());
-        if (dto.getSpecialty() != null) user.setSpecialty(dto.getSpecialty());
-        if (dto.getLocation() != null) user.setLocation(dto.getLocation());
-        if (dto.getDocument() != null) user.setDocument(dto.getDocument());
+        if (dto.getName() != null) {
+            user.setName(dto.getName());
+        }
+        if (dto.getLast_name() != null) {
+            // Nuevo setter camelCase
+            user.setLastName(dto.getLast_name());
+        }
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+        if (dto.getPhotoUrl() != null) {
+            user.setPhotoUrl(dto.getPhotoUrl());
+        }
     }
 }

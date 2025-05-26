@@ -1,114 +1,76 @@
 package com.senna.senna.Service;
 
 import com.senna.senna.DTO.DiaryEntryDTO;
-import com.senna.senna.Entity.*;
+import com.senna.senna.Entity.DiaryEntry;
+import com.senna.senna.Entity.Role;
+import com.senna.senna.Entity.Symptom;
+import com.senna.senna.Entity.Mood;
+import com.senna.senna.Entity.User;
 import com.senna.senna.Repository.DiaryEntryRepository;
-import com.senna.senna.Repository.MoodRepository;
 import com.senna.senna.Repository.SymptomRepository;
+import com.senna.senna.Repository.MoodRepository;
 import com.senna.senna.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class DiaryEntryServiceImpl implements DiaryEntryService {
 
     private final DiaryEntryRepository diaryEntryRepository;
-    private final UserService userService;  // Usado para obtener entidades User (paciente o psicólogo)
-    private final UserRepository userRepository; // Para consultas puntuales, en caso de necesitar obtener paciente por id
+    private final UserRepository userRepository;
     private final SymptomRepository symptomRepository;
     private final MoodRepository moodRepository;
 
-    public DiaryEntryServiceImpl(DiaryEntryRepository diaryEntryRepository,
-                                 UserService userService,
-                                 UserRepository userRepository,
-                                 SymptomRepository symptomRepository,
-                                 MoodRepository moodRepository) {
-        this.diaryEntryRepository = diaryEntryRepository;
-        this.userService = userService;
-        this.userRepository = userRepository;
-        this.symptomRepository = symptomRepository;
-        this.moodRepository = moodRepository;
-    }
-
     @Override
     public DiaryEntry saveEntry(String userEmail, DiaryEntryDTO dto) {
-        User user = userService.findByEmail(userEmail);
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
 
-        // PROTECCIÓN: Evitar null pointer en listas de IDs
         List<Long> symptomIds = dto.getSymptomIds() != null ? dto.getSymptomIds() : Collections.emptyList();
         List<Long> moodIds = dto.getMoodIds() != null ? dto.getMoodIds() : Collections.emptyList();
 
         Set<Symptom> symptoms = new HashSet<>(symptomRepository.findAllById(symptomIds));
         Set<Mood> moods = new HashSet<>(moodRepository.findAllById(moodIds));
 
-        Optional<DiaryEntry> existingEntry = diaryEntryRepository.findByUserAndDate(user, dto.getDate());
-        if (existingEntry.isPresent()) {
-            DiaryEntry entry = existingEntry.get();
-            entry.setSymptoms(symptoms);
-            entry.setMoods(moods);
-            entry.setNotes(dto.getNotes());
-            return diaryEntryRepository.save(entry);
-        } else {
-            DiaryEntry entry = DiaryEntry.builder()
-                    .user(user)
-                    .date(dto.getDate())
-                    .symptoms(symptoms)
-                    .moods(moods)
-                    .notes(dto.getNotes())
-                    .build();
-            return diaryEntryRepository.save(entry);
-        }
+        LocalDate date = dto.getDate();
+        DiaryEntry entry = diaryEntryRepository.findByUserAndDate(user, date)
+                .orElseGet(() -> DiaryEntry.builder()
+                        .user(user)
+                        .date(date)
+                        .build()
+                );
+
+        entry.setSymptoms(symptoms);
+        entry.setMoods(moods);
+        entry.setNotes(dto.getNotes());
+        entry.setMoodLevel(dto.getMoodLevel());
+
+        return diaryEntryRepository.save(entry);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DiaryEntry> getAllEntries(String userEmail) {
-        User user = userService.findByEmail(userEmail);
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
         return diaryEntryRepository.findByUser(user);
     }
 
     @Override
-    public DiaryEntry updateEntry(String userEmail, Long entryId, DiaryEntryDTO dto) {
-        User user = userService.findByEmail(userEmail);
-        DiaryEntry entry = diaryEntryRepository.findById(entryId)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
-
-        if (!entry.getUser().getId_user().equals(user.getId_user())) {
-            throw new IllegalArgumentException("No tienes permiso para editar esta entrada");
-        }
-
-        // PROTECCIÓN: Evitar null pointer en listas de IDs
-        List<Long> symptomIds = dto.getSymptomIds() != null ? dto.getSymptomIds() : Collections.emptyList();
-        List<Long> moodIds = dto.getMoodIds() != null ? dto.getMoodIds() : Collections.emptyList();
-
-        Set<Symptom> symptoms = new HashSet<>(symptomRepository.findAllById(symptomIds));
-        Set<Mood> moods = new HashSet<>(moodRepository.findAllById(moodIds));
-
-        // Actualizar campos
-        entry.setSymptoms(symptoms);
-        entry.setMoods(moods);
-        entry.setNotes(dto.getNotes());
-
-        return diaryEntryRepository.save(entry);
-    }
-    @Override
-    public void deleteEntry(String userEmail, Long entryId) {
-        // Obtener usuario autenticado (paciente)
-        User user = userService.findByEmail(userEmail);
-        // Buscar la entrada por ID
-        DiaryEntry entry = diaryEntryRepository.findById(entryId)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
-        // Verificar que la entrada pertenece al usuario
-        if (!entry.getUser().getId_user().equals(user.getId_user())) {
-            throw new IllegalArgumentException("No tienes permiso para eliminar esta entrada");
-        }
-        diaryEntryRepository.delete(entry);
-    }
-    @Override
+    @Transactional(readOnly = true)
     public DiaryEntry getEntryByDate(String userEmail, String date) {
-        User user = userService.findByEmail(userEmail);
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
         LocalDate localDate = LocalDate.parse(date);
         return diaryEntryRepository.findByUserAndDate(user, localDate)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada para la fecha " + date));
@@ -116,23 +78,51 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
 
     @Override
     public List<DiaryEntry> getEntriesForPatient(String psychologistEmail, Long patientId) {
-        // Obtener la entidad del psicólogo a partir del email
-        User psychologist = userService.findByEmail(psychologistEmail);
-        if (psychologist == null) {
-            throw new EntityNotFoundException("Psicólogo no encontrado con email: " + psychologistEmail);
+        User psychologist = userRepository.findByEmail(psychologistEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + psychologistEmail));
+        if (psychologist.getRole() != Role.PSYCHOLOGIST) {
+            throw new IllegalArgumentException("El usuario debe tener rol PSYCHOLOGIST");
         }
-        if (!psychologist.getRole().equals(Role.PSYCHOLOGIST)) {
-            throw new IllegalArgumentException("El usuario no tiene rol PSYCHOLOGIST");
-        }
-        // Obtener la entidad del paciente usando su id
-        User patient = userService.findByIdEntity(patientId);
-        if (patient == null) {
-            throw new EntityNotFoundException("Paciente no encontrado con id: " + patientId);
-        }
-        // Validar que el paciente esté asignado al psicólogo
-        if (!psychologist.getPatients().contains(patient)) {
-            throw new IllegalArgumentException("El paciente no está asignado al psicólogo");
+        User patient = userRepository.findById(patientId)
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado con id: " + patientId));
+       if (!psychologist.getPatients().contains(patient)) {
+           throw new IllegalArgumentException("El paciente no está asignado al psicólogo");
         }
         return diaryEntryRepository.findByUser(patient);
+    }
+
+    @Override
+    public DiaryEntry updateEntry(String userEmail, Long entryId, DiaryEntryDTO dto) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
+        DiaryEntry entry = diaryEntryRepository.findById(entryId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
+        if (!entry.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("No tienes permiso para editar esta entrada");
+        }
+
+        List<Long> symptomIds = dto.getSymptomIds() != null ? dto.getSymptomIds() : Collections.emptyList();
+        List<Long> moodIds = dto.getMoodIds() != null ? dto.getMoodIds() : Collections.emptyList();
+        Set<Symptom> symptoms = new HashSet<>(symptomRepository.findAllById(symptomIds));
+        Set<Mood> moods = new HashSet<>(moodRepository.findAllById(moodIds));
+
+        entry.setSymptoms(symptoms);
+        entry.setMoods(moods);
+        entry.setNotes(dto.getNotes());
+        entry.setMoodLevel(dto.getMoodLevel());
+
+        return diaryEntryRepository.save(entry);
+    }
+
+    @Override
+    public void deleteEntry(String userEmail, Long entryId) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + userEmail));
+        DiaryEntry entry = diaryEntryRepository.findById(entryId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada con id: " + entryId));
+        if (!entry.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("No tienes permiso para eliminar esta entrada");
+        }
+        diaryEntryRepository.delete(entry);
     }
 }

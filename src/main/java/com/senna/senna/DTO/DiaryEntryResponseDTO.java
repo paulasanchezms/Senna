@@ -8,8 +8,9 @@ import java.util.List;
 public class DiaryEntryResponseDTO {
     private Long id;
     private LocalDate date;
-    private List<MoodDTO> mood;
+    private List<MoodDTO> moods;
     private List<SymptomDTO> symptoms;
     private String notes;
     private UserResponseDTO user;
+    private Integer moodLevel;
 }

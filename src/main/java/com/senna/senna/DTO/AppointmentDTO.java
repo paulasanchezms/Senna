@@ -6,10 +6,10 @@ import java.time.LocalDateTime;
 
 @Data
 public class AppointmentDTO {
-    private LocalDateTime dateTime;
-    private Integer duration;
-    private AppointmentStatus status; // En creación quizá se setee por defecto a PENDIENTE
-    private String description;
-    private Long psychologistId;  // Al registrar, el paciente elige o el sistema asigna un psicólogo.
-    // Opcional: puedes agregar otros campos si es necesario.
+    private Long patientId;            // ID del paciente que reserva
+    private Long psychologistId;       // ID del psicólogo asignado
+    private LocalDateTime dateTime;    // Fecha y hora de la cita
+    private Integer duration;          // Duración en minutos
+    private String description;        // Descripción opcional
+    private AppointmentStatus status;  // Estado de la cita (p.ej. PENDIENTE, CONFIRMADA, CANCELADA)
 }

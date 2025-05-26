@@ -13,11 +13,20 @@ public class UserResponseDTO {
     private String last_name;
     private String email;
     private Role role;
+    private String phone;
+    private String photoUrl;
+    private PsychologistProfileDTO profile;
+    private Double averageRating;
+    private Integer totalReviews;
+    private boolean active;
 
-    // Solo si es PSYCHOLOGIST
-    private String dni;
-    private String qualification;
-    private String specialty;
-    private String location;
-    private String document;
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    private boolean termsAccepted;
 }

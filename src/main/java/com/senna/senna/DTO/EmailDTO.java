@@ -12,11 +12,10 @@ public class EmailDTO {
     private String asunto = "Tienes una notificación de Senna.";
     private String finalMensaje = "Atentamente, " + nombreApp;
 
-    // URLs para entorno local
-    private String urlAdmin = "http://localhost:8100/admin";
-    private String urlHome = "http://localhost:8100/home";
-    private String urlRecuperarClave = "http://localhost:8100/change-password";
-    private String urlLogin = "http://localhost:8100/login";
+    private String urlAdmin = "https://senna-frontend-production.up.railway.app/admin";
+    private String urlHome = "https://senna-frontend-production.up.railway.app/home";
+    private String urlRecuperarClave = "https://senna-frontend-production.up.railway.app/change-password";
+    private String urlLogin = "https://senna-frontend-production.up.railway.app/login";
 
     // Datos personalizables para el contenido del correo
     private String destinatario;

@@ -35,27 +35,52 @@ public class AuthController {
      * Registra un nuevo usuario (paciente o psicólogo) y devuelve un JWT.
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
-            @Valid @RequestBody CreateUserDTO dto
-    ) throws Exception {
-        AuthResponse response = authService.register(dto);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> register(@Valid @RequestBody CreateUserDTO dto) {
+        try {
+            AuthResponse response = authService.register(dto);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace(); // para depuración, puedes quitarlo en producción
+
+            String message = "No se pudo completar el registro. Intenta nuevamente.";
+
+            if (e.getMessage().toLowerCase().contains("email")) {
+                message = "Ya existe una cuenta registrada con este correo.";
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", message));
+        }
     }
 
     /**
      * Registra un psicólogo con su perfil profesional.
      */
+
     @PostMapping(
             value = "/register/psychologist",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity<AuthResponse> registerPsychologist(
+    public ResponseEntity<?> registerPsychologist(
             @Valid @RequestPart("user") CreateUserDTO userDto,
             @Valid @RequestPart("profile") CreatePsychologistProfileDTO profileDto
-    ) throws Exception {
-        userDto.setRole(Role.PSYCHOLOGIST);
-        AuthResponse response = authService.registerPsychologist(userDto, profileDto);
-        return ResponseEntity.ok(response);
+    ) {
+        try {
+            userDto.setRole(Role.PSYCHOLOGIST);
+            AuthResponse response = authService.registerPsychologist(userDto, profileDto);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            String message = "No se pudo registrar el perfil profesional. Intenta nuevamente.";
+
+            if (e.getMessage().toLowerCase().contains("email")) {
+                message = "Ya existe una cuenta registrada con este correo.";
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", message));
+        }
     }
 
     /**

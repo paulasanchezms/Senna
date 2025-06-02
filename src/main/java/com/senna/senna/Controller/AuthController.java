@@ -62,11 +62,14 @@ public class AuthController {
      * Autentica a un usuario existente y devuelve un JWT.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
-            @Valid @RequestBody AuthRequest authRequest
-    ) throws Exception {
-        AuthResponse response = authService.login(authRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            AuthResponse response = authService.login(authRequest);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Correo o contraseña incorrectos"));
+        }
     }
 
     /**

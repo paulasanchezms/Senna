@@ -15,16 +15,17 @@ public class WorkingHourCustomController {
     private final WorkingHourCustomService customService;
 
     @GetMapping
-    public List<WorkingHourCustomDTO> getForDate(@RequestParam Long profileId, @RequestParam String date) {
-        return customService.getByDate(profileId, date);
+    public List<WorkingHourCustomDTO> getForDate(@RequestParam(name = "userId") Long userId, @RequestParam String date) {
+        return customService.getByDate(userId, date);
     }
 
     @PostMapping
     public void saveCustomHours(
-            @RequestParam Long profileId,
+            @RequestParam(name = "userId") Long userId,
             @RequestParam String date,
             @RequestBody List<WorkingHourCustomDTO> hours
     ) {
-        customService.replaceByDate(profileId, date, hours);
+        customService.replaceByDate(userId, date, hours);
     }
+
 }

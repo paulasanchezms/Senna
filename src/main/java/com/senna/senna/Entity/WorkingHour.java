@@ -19,16 +19,20 @@ public class WorkingHour {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Relación con el perfil del psicólogo al que pertenece este horario
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id", nullable = false)
     private PsychologistProfile profile;
 
+    // Día de la semana
     @Column(name = "day_of_week", nullable = false)
     private Integer dayOfWeek;
 
+    // Hora de inicio de disponibilidad
     @Column(name = "start_time", nullable = false)
     private LocalTime startTime;
 
+    // Hora de fin de disponibilidad
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 }

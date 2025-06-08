@@ -15,7 +15,9 @@ public class Mood {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Nombre del estado de ánimo
     private String name;
 
+    // Nombre del icono asociado
     private String icon;
 }

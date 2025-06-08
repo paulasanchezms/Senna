@@ -28,11 +28,14 @@ public class Review {
     @JoinColumn(name = "psychologist_id", nullable = false)
     private User psychologist;
 
+    //Valoración de 1-5
     @Column(nullable = false)
-    private int rating; // 1-5 estrellas
+    private int rating;
 
+    //Comentario
     @Column(length = 500)
     private String comment;
 
+    //Fecha y hora de la valoración
     private LocalDateTime createdAt = LocalDateTime.now();
 }

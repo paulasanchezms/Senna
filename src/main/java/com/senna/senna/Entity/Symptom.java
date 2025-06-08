@@ -15,7 +15,9 @@ public class Symptom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //Nombre
     private String name;
 
+    //Icono
     private String icon;
 }

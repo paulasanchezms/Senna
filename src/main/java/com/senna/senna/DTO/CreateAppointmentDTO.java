@@ -1,4 +1,3 @@
-// CreateAppointmentDTO.java
 package com.senna.senna.DTO;
 
 import lombok.Data;

@@ -21,6 +21,7 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    // Configura la cadena de filtros de seguridad de Spring Security
     @Bean
     public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http) throws Exception {
         http
@@ -36,12 +37,13 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Devuelve el AuthenticationManager necesario para autenticaciones personalizadas
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
-    // Define un PasswordEncoder para codificar contraseñas
+    // Codificador de contraseñas (BCrypt) para almacenar y comparar de forma segura
     @Bean
     public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
         return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();

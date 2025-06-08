@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    // Utiliza una clave secreta robusta (esto es solo un ejemplo)
+    // Clave secreta usada para firmar y verificar los tokens JWT
     private final String SECRET_KEY = "504ad9b188b4934112f52ad9d70ffca385b1f3eb77dfa07093fa7617d418eff4";
 
     public String extractUsername(String token) {

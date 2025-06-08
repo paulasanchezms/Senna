@@ -29,6 +29,7 @@ public class EmailConfig {
     @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
     private String starttls;
 
+    // Bean que configura y devuelve el JavaMailSender para enviar correos desde la aplicación
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();

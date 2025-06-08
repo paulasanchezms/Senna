@@ -20,6 +20,7 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Si no hay estados de ánimo en la base de datos, los inserta por defecto
         if (moodRepository.count() == 0) {
             moodRepository.save(new Mood(null, "Feliz", "happy.png"));
             moodRepository.save(new Mood(null, "Triste", "sad.png"));
@@ -35,6 +36,7 @@ public class DataLoader implements CommandLineRunner {
             moodRepository.save(new Mood(null, "Frustrado", "frustrated.png"));
         }
 
+        // Si no hay síntomas en la base de datos, los inserta por defecto
         if (symptomRepository.count() == 0) {
             symptomRepository.save(new Symptom(null, "Dolor de cabeza", "headache.png"));
             symptomRepository.save(new Symptom(null, "Cansancio", "tiredness.png"));

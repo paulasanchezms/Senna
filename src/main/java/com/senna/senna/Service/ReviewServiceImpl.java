@@ -21,6 +21,10 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
     private final ReviewMapper reviewMapper;
 
+    /**
+     * Guarda una nueva reseña realizada por un paciente hacia un psicólogo.
+     * Verifica que no exista una reseña previa entre los mismos usuarios.
+     */
     @Override
     public ReviewDTO saveReview(String patientEmail, CreateReviewDTO dto) {
         User patient = userRepository.findByEmail(patientEmail)
@@ -43,6 +47,9 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewMapper.toDTO(saved);
     }
 
+    /**
+     * Devuelve todas las reseñas asociadas a un psicólogo concreto.
+     */
     @Override
     public List<ReviewDTO> getReviewsForPsychologist(Long psychologistId) {
         return reviewRepository.findByPsychologist_Id(psychologistId)

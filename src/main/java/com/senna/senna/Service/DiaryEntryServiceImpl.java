@@ -31,6 +31,9 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
     private final SymptomRepository symptomRepository;
     private final MoodRepository moodRepository;
 
+    /**
+     * Guarda una nueva entrada o actualiza una existente para una fecha concreta.
+     */
     @Override
     public DiaryEntry saveEntry(String userEmail, DiaryEntryDTO dto) {
         User user = userRepository.findByEmail(userEmail)
@@ -58,6 +61,9 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         return diaryEntryRepository.save(entry);
     }
 
+    /**
+     * Obtiene todas las entradas de diario del usuario autenticado.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<DiaryEntry> getAllEntries(String userEmail) {
@@ -66,6 +72,9 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         return diaryEntryRepository.findByUser(user);
     }
 
+    /**
+     * Obtiene una entrada específica según la fecha para el usuario autenticado.
+     */
     @Override
     @Transactional(readOnly = true)
     public DiaryEntry getEntryByDate(String userEmail, String date) {
@@ -76,6 +85,9 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró la entrada para la fecha " + date));
     }
 
+    /**
+     * Permite a un psicólogo acceder a las entradas de un paciente asignado.
+     */
     @Override
     public List<DiaryEntry> getEntriesForPatient(String psychologistEmail, Long patientId) {
         User psychologist = userRepository.findByEmail(psychologistEmail)
@@ -91,6 +103,9 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         return diaryEntryRepository.findByUser(patient);
     }
 
+    /**
+     * Actualiza una entrada existente si pertenece al usuario autenticado.
+     */
     @Override
     public DiaryEntry updateEntry(String userEmail, Long entryId, DiaryEntryDTO dto) {
         User user = userRepository.findByEmail(userEmail)
@@ -114,6 +129,9 @@ public class DiaryEntryServiceImpl implements DiaryEntryService {
         return diaryEntryRepository.save(entry);
     }
 
+    /**
+     * Elimina una entrada si pertenece al usuario autenticado.
+     */
     @Override
     public void deleteEntry(String userEmail, Long entryId) {
         User user = userRepository.findByEmail(userEmail)

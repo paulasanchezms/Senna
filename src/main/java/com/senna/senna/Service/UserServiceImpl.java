@@ -36,6 +36,9 @@ public class UserServiceImpl implements UserService {
     private final ReviewRepository reviewRepository;
     private final PsychologistProfileRepository profileRepository;
 
+    /**
+     * Crea un nuevo usuario y lo guarda en la base de datos.
+     */
     @Override
     public UserResponseDTO createUser(CreateUserDTO dto) {
         User user = UserMapper.fromDTO(dto);
@@ -47,6 +50,10 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
         return UserMapper.toResponseDTO(saved);
     }
+
+    /**
+     * Obtiene todos los usuarios con estadísticas de reseñas si son psicólogos.
+     */
     @Override
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll()
@@ -55,6 +62,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene todos los psicólogos incluyendo sus estadísticas de valoración.
+     */
     public List<UserResponseDTO> getAllPsychologists() {
         return userRepository.findByRole(Role.PSYCHOLOGIST)
                 .stream()
@@ -62,6 +72,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene un usuario por su ID.
+     */
     @Override
     public UserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -69,12 +82,18 @@ public class UserServiceImpl implements UserService {
         return mapUserToDTOWithReviewStats(user);
     }
 
+    /**
+     * Obtiene un usuario por su email
+     */
     @Override
     public Optional<UserResponseDTO> getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(this::mapUserToDTOWithReviewStats);
     }
 
+    /**
+     * Devuelve todos los pacientes registrados.
+     */
     @Override
     public List<UserResponseDTO> getAllPatients() {
         return userRepository.findByRole(Role.PATIENT)
@@ -83,6 +102,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Asigna un paciente a un psicólogo.
+     */
     @Override
     public void assignPatientToPsychologist(Long psychologistId, Long patientId) {
         User psy = userRepository.findById(psychologistId)
@@ -98,6 +120,9 @@ public class UserServiceImpl implements UserService {
         userRepository.save(pat);
     }
 
+    /**
+     * Actualiza los datos de un usuario.
+     */
     @Override
     public UserResponseDTO updateUser(Long id, UpdateUserDTO dto) {
         User user = userRepository.findById(id)
@@ -107,6 +132,9 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toResponseDTO(updated);
     }
 
+    /**
+     * Elimina un usuario por ID.
+     */
     @Override
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
@@ -114,11 +142,17 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
+    /**
+     * Verifica si un email ya está registrado.
+     */
     @Override
     public boolean emailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
 
+    /**
+     * Obtiene psicólogos filtrados por especialidad (ignore case).
+     */
     public List<UserResponseDTO> getPsychologistsBySpecialty(String specialty) {
         return userRepository.findByRoleAndProfileSpecialtyContainingIgnoreCase(Role.PSYCHOLOGIST, specialty).stream()
                 .map(this::mapUserToDTOWithReviewStats)
@@ -128,6 +162,9 @@ public class UserServiceImpl implements UserService {
     private static final String IMGBB_API_KEY = "T24a141e99bcbb243bbfab395507de11e";
     private static final String BOUNDARY = "SennaUploadBoundary";
 
+    /**
+     * Sube una imagen a ImgBB y devuelve la URL.
+     */
     public String uploadImageToImgBB(MultipartFile image) {
         try {
             String apiKey = "24a141e99bcbb243bbfab395507de11e";
@@ -154,6 +191,9 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * Construye el cuerpo multipart para enviar la imagen.
+     */
     private static HttpRequest.BodyPublisher ofMimeMultipartData(MultipartFile image, String fieldName) throws IOException {
         String boundary = "----SennaBoundary";
         var byteArrayOutputStream = new ByteArrayOutputStream();
@@ -176,6 +216,9 @@ public class UserServiceImpl implements UserService {
         return HttpRequest.BodyPublishers.ofByteArray(byteArrayOutputStream.toByteArray());
     }
 
+    /**
+     * Actualiza un usuario buscado por email.
+     */
     public void updateUserByEmail(String email, UpdateUserDTO dto) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + email));
@@ -184,6 +227,9 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Agrega estadísticas de reseñas a un usuario si es psicólogo.
+     */
     private UserResponseDTO mapUserToDTOWithReviewStats(User user) {
         UserResponseDTO dto = UserMapper.toResponseDTO(user);
 
@@ -199,6 +245,9 @@ public class UserServiceImpl implements UserService {
         return dto;
     }
 
+    /**
+     * Devuelve los psicólogos pendientes de aprobación.
+     */
     @Override
     public List<UserResponseDTO> findPendingPsychologists() {
         return userRepository.findByRoleAndProfile_Status(Role.PSYCHOLOGIST, ProfileStatus.PENDING)
@@ -207,6 +256,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Aprueba el perfil de un psicólogo y activa su cuenta.
+     */
     @Override
     public void approvePsychologist(Long userId) {
         User user = userRepository.findById(userId)
@@ -221,6 +273,9 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Rechaza el perfil de un psicólogo (no elimina la cuenta).
+     */
     @Override
     public void rejectPsychologist(Long userId) {
         User user = userRepository.findById(userId)
@@ -238,6 +293,9 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Desactiva (banea) un usuario.
+     */
     public void acceptTerms(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + email));

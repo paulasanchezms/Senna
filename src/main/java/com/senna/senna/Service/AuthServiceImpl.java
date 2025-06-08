@@ -36,9 +36,16 @@ public class AuthServiceImpl implements AuthService {
         this.psychologistProfileServiceImpl = psychologistProfileServiceImpl;
     }
 
+    /**
+     * Registro de pacientes.
+     * - Verifica si el email ya existe
+     * - Codifica la contraseña
+     * - Asigna rol PATIENT
+     * - Crea el usuario
+     * - Genera y devuelve el token JWT
+     */
     @Override
     public AuthResponse register(CreateUserDTO dto) throws Exception {
-        // igual que antes, sin perfil
         if (userServiceImpl.emailExists(dto.getEmail())) {
             throw new Exception("El email ya está en uso");
         }
@@ -50,6 +57,15 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponse(token);
     }
 
+    /**
+     * Registro de psicólogos.
+     * - Comprueba email duplicado
+     * - Valida campos obligatorios del perfil profesional
+     * - Codifica la contraseña y asigna rol PSYCHOLOGIST
+     * - Crea el usuario inactivo
+     * - Crea el perfil vinculado
+     * - Devuelve el JWT generado
+     */
     @Override
     public AuthResponse registerPsychologist(
             CreateUserDTO dto,

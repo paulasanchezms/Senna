@@ -31,6 +31,9 @@ public class WorkingHourServiceImpl implements WorkingHourService {
     private final UserRepository userRepo;
     private final AppointmentRepository appointmentRepo;
 
+    /**
+     * Devuelve todas las franjas horarias del psicólogo.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<WorkingHourDTO> getWorkingHours(Long userId) {
@@ -39,6 +42,9 @@ public class WorkingHourServiceImpl implements WorkingHourService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Crea una nueva franja horaria asociada al perfil del psicólogo.
+     */
     @Override
     public WorkingHourDTO createWorkingHour(Long userId, WorkingHourDTO dto) {
         User psychologist = userRepo.findById(userId)
@@ -57,6 +63,10 @@ public class WorkingHourServiceImpl implements WorkingHourService {
         return WorkingHourMapper.toDTO(saved);
     }
 
+
+    /**
+     * Actualiza una franja horaria existente, validando que pertenezca al usuario.
+     */
     @Override
     public WorkingHourDTO updateWorkingHour(Long userId, Long hourId, WorkingHourDTO dto) {
         WorkingHour wh = hourRepo.findById(hourId)
@@ -73,6 +83,9 @@ public class WorkingHourServiceImpl implements WorkingHourService {
         return WorkingHourMapper.toDTO(updated);
     }
 
+    /**
+     * Elimina una franja horaria del psicólogo si le pertenece.
+     */
     @Override
     public void deleteWorkingHour(Long userId, Long hourId) {
         WorkingHour wh = hourRepo.findById(hourId)
@@ -82,7 +95,10 @@ public class WorkingHourServiceImpl implements WorkingHourService {
         }
         hourRepo.delete(wh);
     }
-    /** Reemplaza todas las franjas de un psicólogo. */
+
+    /**
+     * Reemplaza todas las franjas horarias del psicólogo con una nueva lista.
+     */
     @Override
     public List<WorkingHourDTO> replaceWorkingHours(Long userId, List<WorkingHourDTO> hoursDto) {
 
@@ -103,7 +119,7 @@ public class WorkingHourServiceImpl implements WorkingHourService {
             return wh;
         }).collect(Collectors.toList());
         profile.getWorkingHours().addAll(nuevos);
-        // 4) Salvo perfil (cascade persiste las horas)
+        // 4) Salvo perfil
         PsychologistProfile saved = profileRepo.save(profile);
         // 5) Devuelvo DTOs
         return saved.getWorkingHours().stream()
@@ -111,6 +127,10 @@ public class WorkingHourServiceImpl implements WorkingHourService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Calcula y devuelve todos los bloques de tiempo disponibles para un psicólogo en una fecha.
+     * Se basa en sus franjas horarias y en las citas ya reservadas.
+     */
     @Transactional(readOnly = true)
     @Override
     public List<String> getAvailableSlots(Long userId, LocalDate date) {

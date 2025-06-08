@@ -15,6 +15,10 @@ public class MoodServiceImpl implements MoodService {
         this.moodRepository = moodRepository;
     }
 
+    /**
+     * Recupera todos los estados de ánimo disponibles en la base de datos.
+     * @return lista de objetos Mood
+     */
     @Override
     public List<Mood> getAllMoods() {
         return moodRepository.findAll();

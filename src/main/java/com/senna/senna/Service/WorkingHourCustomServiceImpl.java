@@ -24,6 +24,13 @@ public class WorkingHourCustomServiceImpl implements WorkingHourCustomService {
     private final WorkingHourCustomRepository customRepo;
     private final PsychologistProfileRepository profileRepo;
 
+    /**
+     * Obtiene todas las franjas horarias personalizadas para un psicólogo en una fecha específica.
+     *
+     * @param profileId ID del usuario (psicólogo).
+     * @param dateStr Fecha en formato string (yyyy-MM-dd).
+     * @return Lista de DTOs con las franjas horarias personalizadas.
+     */
     @Override
     public List<WorkingHourCustomDTO> getByDate(Long profileId, String dateStr) {
         PsychologistProfile profile = profileRepo.findByUserId(profileId)
@@ -34,6 +41,14 @@ public class WorkingHourCustomServiceImpl implements WorkingHourCustomService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Reemplaza las franjas horarias personalizadas de un psicólogo para una fecha concreta.
+     * Primero elimina todas las existentes para esa fecha y luego guarda las nuevas.
+     *
+     * @param profileId ID del usuario (psicólogo).
+     * @param dateStr Fecha en formato string (yyyy-MM-dd).
+     * @param dtos Lista de franjas horarias personalizadas a guardar.
+     */
     @Override
     @Transactional
     public void replaceByDate(Long profileId, String dateStr, List<WorkingHourCustomDTO> dtos) {
@@ -55,6 +70,9 @@ public class WorkingHourCustomServiceImpl implements WorkingHourCustomService {
         customRepo.saveAll(entities);
     }
 
+    /**
+     * Convierte una entidad WorkingHourCustom en su DTO correspondiente.
+     */
     private WorkingHourCustomDTO mapToDTO(WorkingHourCustom wh) {
         WorkingHourCustomDTO dto = new WorkingHourCustomDTO();
         dto.setId(wh.getId());

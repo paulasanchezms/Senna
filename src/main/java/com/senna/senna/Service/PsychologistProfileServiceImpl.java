@@ -27,6 +27,9 @@ public class PsychologistProfileServiceImpl implements PsychologistProfileServic
     private final PsychologistProfileRepository profileRepo;
     private final UserRepository userRepo;
 
+    /**
+     * Obtiene el perfil de psicólogo asociado a un usuario.
+     */
     @Override
     @Transactional(readOnly = true)
     public PsychologistProfileDTO getProfile(Long userId) {
@@ -35,6 +38,9 @@ public class PsychologistProfileServiceImpl implements PsychologistProfileServic
         return PsychologistProfileMapper.toDTO(profile);
     }
 
+    /**
+     * Crea un nuevo perfil de psicólogo para un usuario con rol PSYCHOLOGIST.
+     */
     @Override
     @Transactional
     public PsychologistProfileDTO createProfile(Long userId, CreatePsychologistProfileDTO dto) {
@@ -48,6 +54,10 @@ public class PsychologistProfileServiceImpl implements PsychologistProfileServic
         return PsychologistProfileMapper.toDTO(saved);
     }
 
+
+    /**
+     * Actualiza los datos del perfil profesional del psicólogo.
+     */
     @Override
     @Transactional
     public PsychologistProfileDTO updateProfile(Long userId, UpdatePsychologistProfileDTO dto) {
@@ -58,6 +68,9 @@ public class PsychologistProfileServiceImpl implements PsychologistProfileServic
         return PsychologistProfileMapper.toDTO(saved);
     }
 
+    /**
+     * Reemplaza completamente las franjas horarias del psicólogo por las nuevas proporcionadas.
+     */
     @Override
     @Transactional
     public void updateWorkingHours(Long userId, List<WorkingHourDTO> hoursDto) {

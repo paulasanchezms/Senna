@@ -15,6 +15,11 @@ public class SymptomServiceImpl implements SymptomService {
         this.symptomRepository = symptomRepository;
     }
 
+
+    /**
+     * Obtiene todos los síntomas registrados en la base de datos.
+     * @return Lista de entidades Symptom.
+     */
     @Override
     public List<Symptom> getAllSymptoms() {
         return symptomRepository.findAll();

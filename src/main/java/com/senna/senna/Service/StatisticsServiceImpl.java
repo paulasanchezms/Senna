@@ -27,6 +27,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final DiaryEntryRepository diaryEntryRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Devuelve las estadísticas semanales del usuario autenticado (paciente).
+     */
     @Override
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getWeeklyStatistics(String userEmail) {
@@ -37,6 +40,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         return getWeeklyStatistics(userEmail, currentYear, currentWeek, null);
     }
 
+    /**
+     * Devuelve las estadísticas semanales de un paciente, si el usuario autenticado es un psicólogo.
+     */
     @Override
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getWeeklyStatistics(String userEmail, Long patientId) {
@@ -47,6 +53,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         return getWeeklyStatistics(userEmail, currentYear, currentWeek, patientId);
     }
 
+    /**
+     * Devuelve las estadísticas semanales de un usuario (paciente o psicólogo con acceso).
+     */
     @Override
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getWeeklyStatistics(String userEmail, int year, int weekOfYear, Long patientId) {
@@ -63,6 +72,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         return calculateStatistics(entries, true, monday, sunday);
     }
 
+    /**
+     * Devuelve las estadísticas mensuales del usuario autenticado (paciente).
+     */
     @Override
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getMonthlyStatistics(String userEmail) {
@@ -70,6 +82,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         return getMonthlyStatistics(userEmail, today.getYear(), today.getMonthValue(), null);
     }
 
+    /**
+     * Devuelve las estadísticas mensuales de un paciente, si el usuario autenticado es un psicólogo.
+     */
     @Override
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getMonthlyStatistics(String userEmail, Long patientId) {
@@ -77,6 +92,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         return getMonthlyStatistics(userEmail, today.getYear(), today.getMonthValue(), patientId);
     }
 
+    /**
+     * Devuelve las estadísticas mensuales de un usuario (paciente o psicólogo con acceso).
+     */
     @Override
     @Transactional(readOnly = true)
     public StatisticsResponseDTO getMonthlyStatistics(String userEmail, int year, int month, Long patientId) {
@@ -91,6 +109,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         return calculateStatistics(entries, false, startOfMonth, endOfMonth);
     }
 
+    /**
+     * Determina si el usuario autenticado es paciente o psicólogo (y si tiene acceso).
+     */
     private User resolveUserContext(String psychologistEmail, Long patientId) {
         if (patientId != null) {
             validatePsychologistAccess(psychologistEmail, patientId);
@@ -102,11 +123,17 @@ public class StatisticsServiceImpl implements StatisticsService {
         }
     }
 
+    /**
+     * Validación de acceso del psicólogo al paciente. Puede expandirse según lógica de negocio.
+     */
     private void validatePsychologistAccess(String psychologistEmail, Long patientId) {
-        // Aquí puedes validar que el psicólogo tenga permiso para ver los datos de ese paciente si lo necesitas
+        // Aquí se puede validar que el psicólogo tenga permiso para ver los datos de ese paciente
         // De momento se asume que sí si llega hasta aquí
     }
 
+    /**
+     * Calcula las estadísticas comunes (usadas tanto en vista semanal como mensual).
+     */
     private StatisticsResponseDTO calculateStatistics(
             List<DiaryEntry> entries,
             boolean isWeekly,

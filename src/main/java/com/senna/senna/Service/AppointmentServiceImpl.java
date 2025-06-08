@@ -29,6 +29,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserRepository userRepo;
     private final WorkingHourCustomRepository customHourRepo;
 
+    /**
+     * Crea una nueva cita. Valida que la fecha esté al menos a 1h en el futuro
+     * y que no exista una cita duplicada para ese horario.
+     */
     @Override
     @Transactional
     public AppointmentResponseDTO scheduleAppointment(CreateAppointmentDTO dto) {
@@ -57,6 +61,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         return AppointmentMapper.toDTO(saved);
     }
 
+    /**
+     * Obtiene las franjas horarias disponibles de un psicólogo para un día concreto.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<String> getAvailableTimes(Long psychologistId, LocalDate date) {
@@ -88,7 +95,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
 
-
+    /**
+     * Obtiene las franjas horarias disponibles para una semana completa.
+     */
     @Transactional(readOnly = true)
     public Map<LocalDate, List<String>> getAvailableTimesForWeek(Long psychologistId, LocalDate startDate, LocalDate endDate) {
         User psychologist = userRepo.findById(psychologistId)
@@ -126,6 +135,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         return available;
     }
 
+
+    /**
+     * Obtiene los horarios efectivos para un día: horarios personalizados o normales.
+     */
     private List<WorkingHour> getEffectiveWorkingHours(PsychologistProfile profile, LocalDate date, int dow) {
         List<WorkingHourCustom> customHours = customHourRepo.findByProfileAndDate(profile, date);
         if (!customHours.isEmpty()) {
@@ -143,6 +156,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Calcula franjas de horario posibles, excluyendo las ya ocupadas.
+     */
     private List<String> calculateSlots(List<WorkingHour> hours, List<LocalTime> booked, int duration) {
         List<String> slots = new ArrayList<>();
 
@@ -165,6 +181,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         return slots;
     }
 
+    /**
+     * Actualiza la fecha, duración o descripción de una cita.
+     */
     @Override
     @Transactional
     public AppointmentResponseDTO updateAppointment(Long appointmentId, CreateAppointmentDTO dto) {
@@ -177,6 +196,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         return AppointmentMapper.toDTO(updated);
     }
 
+    /**
+     * Cancela una cita cambiando su estado.
+     */
     @Override
     @Transactional
     public void cancelAppointment(Long appointmentId) {
@@ -186,6 +208,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentRepo.save(ap);
     }
 
+    /**
+     * Devuelve todas las citas de un paciente.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentResponseDTO> getAppointmentsForPatient(Long patientId) {
@@ -197,6 +222,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve todas las citas de un psicólogo.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentResponseDTO> getAppointmentsForPsychologist(Long psychologistId) {
@@ -208,6 +236,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Devuelve las citas pendientes de un psicólogo.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentResponseDTO> getPendingAppointmentsForPsychologist(Long psychologistId) {
@@ -219,6 +250,10 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .collect(Collectors.toList());
     }
 
+
+    /**
+     * Acepta una cita y vincula al paciente con el psicólogo.
+     */
     @Override
     @Transactional
     public void acceptAppointment(Long appointmentId) {
@@ -240,6 +275,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
+    /**
+     * Rechaza una cita cambiando su estado a CANCELADA.
+     */
     @Override
     @Transactional
     public void rejectAppointment(Long appointmentId) {
@@ -249,6 +287,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentRepo.save(ap);
     }
 
+    /**
+     * Obtiene la lista de pacientes con citas asignadas a un psicólogo.
+     */
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getPatientsForPsychologist(Long psychologistId) {
         User psychologist = userRepo.findById(psychologistId)
@@ -260,6 +301,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .toList();
     }
 
+    /**
+     * Cancela todas las citas de un paciente con un psicólogo específico.
+     */
     @Transactional
     public void cancelAllAppointmentsWithPsychologist(Long patientId, Long psychologistId) {
         List<Appointment> appointments = appointmentRepo.findByPatient_IdAndPsychologist_IdAndStatusIn(

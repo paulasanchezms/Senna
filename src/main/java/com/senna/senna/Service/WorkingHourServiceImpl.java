@@ -139,7 +139,7 @@ public class WorkingHourServiceImpl implements WorkingHourService {
                 .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado: " + userId));
 
         int duration = profile.getConsultationDuration();
-        int dayOfWeek = date.getDayOfWeek().getValue() - 1; // Lunes = 0, Domingo = 6
+        int dayOfWeek = date.getDayOfWeek().getValue() - 1;
 
         // Obtener franjas de ese día
         List<WorkingHour> hours = hourRepo.findByProfileUserIdAndDayOfWeek(userId, dayOfWeek);
@@ -162,7 +162,7 @@ public class WorkingHourServiceImpl implements WorkingHourService {
 
             while (!start.plusMinutes(duration).isAfter(end)) {
                 if (!reservedTimes.contains(start)) {
-                    slots.add(start.toString().substring(0,5)); // HH:mm
+                    slots.add(start.toString().substring(0,5));
                 }
                 start = start.plusMinutes(duration);
             }

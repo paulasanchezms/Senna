@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class ReviewMapper {
 
+    // Convierte una entidad Review en un ReviewDTO
     public ReviewDTO toDTO(Review review) {
         ReviewDTO dto = new ReviewDTO();
         dto.setId(review.getId());
@@ -16,7 +17,7 @@ public class ReviewMapper {
         dto.setComment(review.getComment());
         dto.setCreatedAt(review.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         dto.setPatientName(review.getPatient().getName() + " " + review.getPatient().getLastName());
-        dto.setPatientPhoto(review.getPatient().getPhotoUrl()); // puede ser null
+        dto.setPatientPhoto(review.getPatient().getPhotoUrl());
         return dto;
     }
 }

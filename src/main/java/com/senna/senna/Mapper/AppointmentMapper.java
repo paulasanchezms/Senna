@@ -4,8 +4,7 @@ import com.senna.senna.DTO.AppointmentResponseDTO;
 import com.senna.senna.DTO.CreateAppointmentDTO;
 import com.senna.senna.Entity.Appointment;
 import com.senna.senna.Entity.User;
-import com.senna.senna.DTO.UserResponseDTO;
-import com.senna.senna.Mapper.UserMapper;
+
 
 
 /**
@@ -40,8 +39,6 @@ public class AppointmentMapper {
         entity.setDateTime(dto.getDateTime());
         entity.setDuration(dto.getDuration());
         entity.setDescription(dto.getDescription());
-        // El servicio debe asignar el status PENDIENTE antes de guardar:
-        // entity.setStatus(AppointmentStatus.PENDIENTE);
         return entity;
     }
 }

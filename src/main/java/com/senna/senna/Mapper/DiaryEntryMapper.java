@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 public class DiaryEntryMapper {
 
+    // Convierte una entidad DiaryEntry a su DTO de respuesta
     public static DiaryEntryResponseDTO toResponseDTO(DiaryEntry entry) {
         DiaryEntryResponseDTO dto = new DiaryEntryResponseDTO();
         dto.setId(entry.getId());
@@ -41,6 +42,7 @@ public class DiaryEntryMapper {
         return dto;
     }
 
+    // Convierte una entidad Mood a MoodDTO
     private static MoodDTO toMoodDTO(Mood mood) {
         MoodDTO dto = new MoodDTO();
         dto.setId(mood.getId());
@@ -49,6 +51,7 @@ public class DiaryEntryMapper {
         return dto;
     }
 
+    // Convierte una entidad Symptom a SymptomDTO
     private static SymptomDTO toSymptomDTO(Symptom symptom) {
         SymptomDTO dto = new SymptomDTO();
         dto.setId(symptom.getId());

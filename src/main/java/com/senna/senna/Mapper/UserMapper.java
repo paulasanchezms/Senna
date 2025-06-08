@@ -8,6 +8,7 @@ import com.senna.senna.Entity.User;
 
 public class UserMapper {
 
+    // Convierte un CreateUserDTO en una entidad User
     public static User fromDTO(CreateUserDTO dto) {
         User user = new User();
         user.setName(dto.getName());
@@ -20,11 +21,11 @@ public class UserMapper {
         return user;
     }
 
+    // Convierte una entidad User a un UserResponseDTO (para respuestas)
     public static UserResponseDTO toResponseDTO(User user) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.setId_user(user.getId());
         dto.setName(user.getName());
-        // Usamos getLastName() de la entidad
         dto.setLast_name(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
@@ -33,6 +34,7 @@ public class UserMapper {
         dto.setActive(user.isActive());
         dto.setTermsAccepted(user.isTermsAccepted());
 
+        // Si el usuario tiene perfil profesional, se incluye en el DTO
         if (user.getProfile() != null) {
             PsychologistProfileDTO profileDTO = new PsychologistProfileDTO();
             profileDTO.setConsultationDuration(user.getProfile().getConsultationDuration());
@@ -46,12 +48,12 @@ public class UserMapper {
         return dto;
     }
 
+    // Aplica los cambios de un UpdateUserDTO sobre un usuario existente
     public static void updateUserFromDTO(User user, UpdateUserDTO dto) {
         if (dto.getName() != null) {
             user.setName(dto.getName());
         }
         if (dto.getLast_name() != null) {
-            // Nuevo setter camelCase
             user.setLastName(dto.getLast_name());
         }
         if (dto.getPhone() != null) {

@@ -10,9 +10,9 @@ import java.time.LocalTime;
 public class WorkingHourMapper {
 
     /**
-     * Mapea una entidad WorkingHour a su DTO.
+     * Convierte una entidad WorkingHour en un DTO.
      * @param wh entidad a convertir
-     * @return DTO con datos de la franja horaria
+     * @return DTO con los datos básicos de la franja horaria
      */
     public static WorkingHourDTO toDTO(WorkingHour wh) {
         WorkingHourDTO dto = new WorkingHourDTO();
@@ -23,10 +23,10 @@ public class WorkingHourMapper {
     }
 
     /**
-     * Mapea un DTO a una nueva entidad WorkingHour.
-     * El profile debe asignarse externamente.
-     * @param dto datos de la franja horaria
-     * @return entidad sin profile aún
+     * Convierte un DTO en una entidad WorkingHour.
+     * El campo `profile` debe ser asignado manualmente desde el servicio.
+     * @param dto DTO con los datos de horario
+     * @return entidad WorkingHour sin perfil asignado aún
      */
     public static WorkingHour toEntity(WorkingHourDTO dto) {
         WorkingHour wh = new WorkingHour();

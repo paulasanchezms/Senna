@@ -12,7 +12,7 @@ public class CreateUserDTO {
     private Role role;
 
     private boolean active;
-    private boolean termsAccepted; // Añadido
+    private boolean termsAccepted;
 
     public boolean isActive() {
         return active;

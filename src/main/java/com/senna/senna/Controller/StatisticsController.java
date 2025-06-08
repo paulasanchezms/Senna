@@ -18,6 +18,7 @@ public class StatisticsController {
         this.statisticsService = statisticsService;
     }
 
+    // Devuelve las estadísticas semanales del usuario autenticado o de un paciente concreto (si es psicólogo)
     @GetMapping("/weekly")
     public ResponseEntity<StatisticsResponseDTO> getWeeklyStatistics(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -36,6 +37,7 @@ public class StatisticsController {
         return ResponseEntity.ok(stats);
     }
 
+    // Devuelve las estadísticas mensuales del usuario autenticado o de un paciente concreto (si es psicólogo)
     @GetMapping("/monthly")
     public ResponseEntity<StatisticsResponseDTO> getMonthlyStatistics(
             @AuthenticationPrincipal UserDetails userDetails,

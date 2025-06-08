@@ -81,6 +81,7 @@ public class WorkingHourController {
         return ResponseEntity.noContent().build();
     }
 
+    // Devuelve la lista de horarios disponibles para un psicólogo en una fecha específica
     @GetMapping("/availability")
     public ResponseEntity<List<String>> getAvailableSlots(
             @RequestParam Long psychologistId,

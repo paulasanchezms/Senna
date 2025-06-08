@@ -31,16 +31,14 @@ public class AuthController {
     private final EmailService emailService;
 
 
-    /**
-     * Registra un nuevo usuario (paciente o psicólogo) y devuelve un JWT.
-     */
+    // Registra un nuevo usuario paciente
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody CreateUserDTO dto) {
         try {
             AuthResponse response = authService.register(dto);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // para depuración, puedes quitarlo en producción
+            e.printStackTrace();
 
             String message = "No se pudo completar el registro. Intenta nuevamente.";
 
@@ -53,10 +51,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * Registra un psicólogo con su perfil profesional.
-     */
-
+    // Registra un psicólogo incluyendo su perfil profesional
     @PostMapping(
             value = "/register/psychologist",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -83,9 +78,7 @@ public class AuthController {
         }
     }
 
-    /**
-     * Autentica a un usuario existente y devuelve un JWT.
-     */
+    // Autentica un usuario y devuelve un JWT
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
         try {

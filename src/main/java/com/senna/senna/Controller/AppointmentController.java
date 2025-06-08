@@ -40,6 +40,7 @@ public class AppointmentController {
         this.appointmentRepository = appointmentRepository;
     }
 
+    // Crea una cita asociada al paciente autenticado
     @PostMapping
     public ResponseEntity<AppointmentResponseDTO> scheduleAppointment(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -52,18 +53,21 @@ public class AppointmentController {
         return ResponseEntity.status(201).body(response);
     }
 
+    // Actualiza una cita por su ID
     @PutMapping("/{id}")
     public ResponseEntity<AppointmentResponseDTO> updateAppointment(@PathVariable Long id, @RequestBody CreateAppointmentDTO dto) {
         AppointmentResponseDTO updated = appointmentService.updateAppointment(id, dto);
         return ResponseEntity.ok(updated);
     }
 
+    // Cancela una cita por su ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelAppointment(@PathVariable Long id) {
         appointmentService.cancelAppointment(id);
         return ResponseEntity.noContent().build();
     }
 
+    // Obtiene las citas del paciente autenticado
     @GetMapping("/patient")
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsForPatient(@AuthenticationPrincipal UserDetails userDetails) {
         User patient = userRepository.findByEmail(userDetails.getUsername())
@@ -74,6 +78,7 @@ public class AppointmentController {
         return ResponseEntity.ok(list);
     }
 
+    // Obtiene las citas del psicólogo autenticado
     @GetMapping("/psychologist")
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsForPsychologist(@AuthenticationPrincipal UserDetails userDetails) {
         User psychologist = userRepository.findByEmail(userDetails.getUsername())
@@ -84,6 +89,7 @@ public class AppointmentController {
         return ResponseEntity.ok(list);
     }
 
+    // Devuelve los horarios disponibles para un día (psicólogo autenticado)
     @GetMapping("/available-times")
     public ResponseEntity<List<String>> getAvailableTimes(@AuthenticationPrincipal UserDetails userDetails,
                                                           @RequestParam("date") LocalDate date) {
@@ -95,6 +101,7 @@ public class AppointmentController {
         return ResponseEntity.ok(slots);
     }
 
+    // Devuelve los horarios disponibles para una semana (psicólogo autenticado)
     @GetMapping("/available-times/week")
     public ResponseEntity<Map<LocalDate, List<String>>> getAvailableTimesForWeek(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -107,6 +114,7 @@ public class AppointmentController {
         return ResponseEntity.ok(slots);
     }
 
+    // Obtiene las citas pendientes del psicólogo autenticado (evita duplicados)
     @GetMapping("/psychologist/pending")
     public List<AppointmentResponseDTO> getPendingAppointmentsForAuthenticatedPsychologist(@AuthenticationPrincipal UserDetails userDetails) {
         User psychologist = userRepository.findByEmail(userDetails.getUsername())
@@ -114,7 +122,6 @@ public class AppointmentController {
 
         List<Appointment> appointments = appointmentRepository.findByPsychologistAndStatus(psychologist, AppointmentStatus.PENDIENTE);
 
-        // ✅ Mapa para evitar duplicados por ID
         Map<Long, AppointmentResponseDTO> únicos = new LinkedHashMap<>();
         for (Appointment a : appointments) {
             únicos.putIfAbsent(a.getId(), AppointmentMapper.toDTO(a));
@@ -123,16 +130,19 @@ public class AppointmentController {
         return new ArrayList<>(únicos.values());
     }
 
+    // Acepta una cita
     @PostMapping("/{id}/accept")
     public void acceptAppointment(@PathVariable Long id) {
         appointmentService.acceptAppointment(id);
     }
 
+    // Rechaza una cita
     @PostMapping("/{id}/reject")
     public void rejectAppointment(@PathVariable Long id) {
         appointmentService.rejectAppointment(id);
     }
 
+    // Devuelve los pacientes que tienen citas con el psicólogo autenticado
     @GetMapping("/psychologist/patients")
     public ResponseEntity<List<UserResponseDTO>> getPatientsOfPsychologist(@AuthenticationPrincipal UserDetails userDetails) {
         User psychologist = userRepository.findByEmail(userDetails.getUsername())
@@ -142,6 +152,7 @@ public class AppointmentController {
         return ResponseEntity.ok(patients);
     }
 
+    // Devuelve horarios disponibles de un psicólogo específico (por ID) para un día
     @GetMapping("/psychologists/{id}/available-times")
     public ResponseEntity<List<String>> getAvailableTimesForPsychologistId(@PathVariable Long id,
                                                                            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -149,6 +160,7 @@ public class AppointmentController {
         return ResponseEntity.ok(slots);
     }
 
+    // Devuelve horarios disponibles de un psicólogo específico (por ID) para una semana
     @GetMapping("/psychologists/{id}/available-times/week")
     public ResponseEntity<Map<LocalDate, List<String>>> getAvailableTimesForWeekById(
             @PathVariable Long id,
@@ -159,6 +171,7 @@ public class AppointmentController {
         return ResponseEntity.ok(slots);
     }
 
+    // Cancela todas las citas entre un paciente autenticado y un psicólogo por ID
     @DeleteMapping("/cancel-by-psychologist/{psychologistId}")
     public ResponseEntity<Void> cancelAllWithPsychologist(
             @AuthenticationPrincipal UserDetails userDetails,

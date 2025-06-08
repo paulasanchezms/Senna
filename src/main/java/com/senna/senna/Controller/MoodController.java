@@ -16,6 +16,7 @@ public class MoodController {
         this.moodService = moodService;
     }
 
+    //Obtiene una lista de estados de ánimo
     @GetMapping
     public List<Mood> getAllMoods() {
         return moodService.getAllMoods();

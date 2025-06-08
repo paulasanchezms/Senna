@@ -93,6 +93,7 @@ public class UserController {
         return ResponseEntity.ok(userServiceImpl.getPsychologistsBySpecialty(specialty));
     }
 
+    // Devuelve el usuario autenticado
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> getCurrentUser(
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails
@@ -102,12 +103,14 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // Sube una imagen de perfil a ImgBB y devuelve la URL
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile image) {
         String imageUrl = userServiceImpl.uploadImageToImgBB(image);
         return ResponseEntity.ok().body(Map.of("url", imageUrl));
     }
 
+    // Actualiza los datos del usuario autenticado
     @PutMapping("/me")
     public ResponseEntity<Void> updateCurrentUser(
             @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails,
@@ -117,6 +120,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    // Marca los términos y condiciones como aceptados por el usuario autenticado
     @PutMapping("/accept-terms")
     public ResponseEntity<Void> acceptTerms(@AuthenticationPrincipal UserDetails userDetails) {
         userServiceImpl.acceptTerms(userDetails.getUsername());

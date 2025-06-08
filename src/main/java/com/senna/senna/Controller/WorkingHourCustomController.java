@@ -14,11 +14,13 @@ public class WorkingHourCustomController {
 
     private final WorkingHourCustomService customService;
 
+    // Devuelve las franjas horarias personalizadas para un usuario en una fecha concreta
     @GetMapping
     public List<WorkingHourCustomDTO> getForDate(@RequestParam(name = "userId") Long userId, @RequestParam String date) {
         return customService.getByDate(userId, date);
     }
 
+    // Guarda o reemplaza las franjas horarias personalizadas para una fecha concreta
     @PostMapping
     public void saveCustomHours(
             @RequestParam(name = "userId") Long userId,

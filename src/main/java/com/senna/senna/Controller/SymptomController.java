@@ -18,6 +18,7 @@ public class SymptomController {
         this.symptomService = symptomService;
     }
 
+    //Obtiene una lista de los síntomas
     @GetMapping
     public List<Symptom> getAllSymptoms() {
         return symptomService.getAllSymptoms();

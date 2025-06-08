@@ -26,18 +26,20 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             LocalDateTime end
     );
 
-    /** Citas de un psicólogo en un rango excluyendo un estado (p.ej. CANCELADA) */
-    List<Appointment> findByPsychologistAndDateTimeBetweenAndStatusNot(
-            User psychologist,
-            LocalDateTime start,
-            LocalDateTime end,
-            AppointmentStatus status
-    );
-
+    /**
+     * Devuelve todas las citas de un psicólogo con un estado específico (pendiente, confirmada, etc.).
+     */
     List<Appointment> findByPsychologistAndStatus(User psychologist, AppointmentStatus status);
 
+    /**
+     * Devuelve todas las citas de un psicólogo entre dos fechas, usando su ID en lugar del objeto.
+     */
     List<Appointment> findByPsychologistIdAndDateTimeBetween(Long psychologistId, LocalDateTime start, LocalDateTime end);
 
+    /**
+     * Comprueba si ya existe una cita entre un paciente y un psicólogo en un horario específico
+     * y con un estado determinado (por ejemplo, pendiente o confirmada).
+     */
     boolean existsByPsychologistAndPatientAndDateTimeAndStatusIn(
             User psychologist,
             User patient,
@@ -45,6 +47,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             List<AppointmentStatus> statuses
     );
 
+    /**
+     * Devuelve todas las citas entre un paciente y un psicólogo que estén en alguno de los estados dados.
+     * Útil para verificar historial de relaciones entre ambos.
+     */
     List<Appointment> findByPatient_IdAndPsychologist_IdAndStatusIn(
             Long patientId,
             Long psychologistId,

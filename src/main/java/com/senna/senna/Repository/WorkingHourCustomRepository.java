@@ -9,9 +9,20 @@ import java.util.List;
 
 public interface WorkingHourCustomRepository extends JpaRepository<WorkingHourCustom, Long> {
 
+    /**
+     * Obtiene todas las franjas horarias personalizadas para un perfil y una fecha concretos.
+     *
+     * @param profile el perfil del psicólogo
+     * @param date la fecha específica
+     * @return lista de franjas horarias personalizadas
+     */
     List<WorkingHourCustom> findByProfileAndDate(PsychologistProfile profile, LocalDate date);
 
-    List<WorkingHourCustom> findByProfile(PsychologistProfile profile);
-
+    /**
+     * Elimina todas las franjas horarias personalizadas para un perfil y una fecha concretos.
+     *
+     * @param profile el perfil del psicólogo
+     * @param date la fecha específica
+     */
     void deleteByProfileAndDate(PsychologistProfile profile, LocalDate date);
 }

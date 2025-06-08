@@ -12,11 +12,25 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    /**
+     * Busca un usuario por su correo electrónico.
+     */
     Optional<User> findByEmail(String email);
-    List<User> findByRole(Role role);
-    List<User> findByRoleAndProfileSpecialtyContainingIgnoreCase(Role role, String specialty);
-    List<User> findByRoleAndProfile_Status(Role role, ProfileStatus status);
-    List<User> findByRoleAndActiveFalse(Role role);
 
+    /**
+     * Lista todos los usuarios según su rol (por ejemplo, ROLE.PSYCHOLOGIST o ROLE.PATIENT).
+     */
+    List<User> findByRole(Role role);
+
+    /**
+     * Busca psicólogos por especialidad, ignorando mayúsculas y minúsculas.
+     * Útil para filtros en búsquedas.
+     */
+    List<User> findByRoleAndProfileSpecialtyContainingIgnoreCase(Role role, String specialty);
+
+    /**
+     * Lista usuarios según su rol y el estado de su perfil profesional (por ejemplo, APROBADO o PENDING).
+     */
+    List<User> findByRoleAndProfile_Status(Role role, ProfileStatus status);
 
 }

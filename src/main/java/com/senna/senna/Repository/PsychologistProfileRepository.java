@@ -16,7 +16,7 @@ public interface PsychologistProfileRepository extends JpaRepository<Psychologis
     Optional<PsychologistProfile> findByUserId(Long userId);
 
     /**
-     * Recupera el perfil junto con las workingHours (fetch join).
+     * Recupera el perfil junto con las workingHours
      */
     @Query("SELECT p FROM PsychologistProfile p LEFT JOIN FETCH p.workingHours WHERE p.user.id = :userId")
     Optional<PsychologistProfile> findByUserIdWithWorkingHours(@Param("userId") Long userId);
